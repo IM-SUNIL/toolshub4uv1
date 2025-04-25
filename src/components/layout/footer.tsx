@@ -79,9 +79,6 @@ export function Footer() {
               <Twitter className="h-6 w-6" />
             </Link>
           </div>
-           <p className="text-muted-foreground mt-4 text-sm">
-             Stay updated with the latest tools and features.
-           </p>
         </div>
       </div>
       {/* Also added pl-6 to the copyright section for consistency */}
