@@ -20,16 +20,17 @@ const featuredTools = [
 ];
 
 const categories = [
-   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' }, // New
-  { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' }, // New
-  { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' }, // New
-  { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
-  { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
-  { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
-  { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
-  { name: 'Image Tools', icon: Brush, description: 'Background removal, resizing, filters' }, // Use Brush for Image Tools
-  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
+   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' },
+   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' },
+   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' },
+   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
+   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
+   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
+   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
+   { name: 'Image Tools', icon: Brush, description: 'Background removal, resizing, filters' },
+   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
 ];
+
 
 const whyUsFeatures = [
   { icon: Gift, title: 'Free Forever', description: 'Access all tools without any cost.' },
@@ -49,11 +50,11 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[70vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden">
+      <section className="w-full h-[60vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden animated-gradient"> {/* Reduced height */}
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
-         {/* Apply animated text gradient class here */}
-         <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight animated-text-gradient">
+          {/* Apply animated text gradient class here */}
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight animated-text-gradient">
             Your Ultimate Hub for Free Online Tools.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -79,10 +80,10 @@ const Home: NextPage = () => {
       </section>
 
       {/* Popular Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 pt-12 pb-8 mt-0 mb-8 relative"> {/* Removed mt-8 */}
+      <section className="w-full max-w-6xl px-4 pt-12 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8, Removed background class */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.slice(0, 9).map((category, index) => ( // Limit to 9 categories
+          {categories.slice(0, 9).map((category, index) => ( // Display first 9 categories
             <Card key={index} className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer flex flex-col h-full">
               <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
@@ -94,13 +95,13 @@ const Home: NextPage = () => {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent backdrop-blur-sm pointer-events-none z-10"></div>
       </section>
 
-       {/* Explore More Categories Button Section */}
+      {/* Explore More Categories Button Section */}
       <section className="w-full max-w-6xl px-4 mb-16 flex justify-center -mt-8 z-20"> {/* Positioned below overlay */}
           <Button
               variant="outline"
               size="lg"
               onClick={handleExploreMore}
-              className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border px-6 py-3 sm:px-8" // Added padding for better tappability
+              className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border px-6 py-3 sm:px-8 sm:py-4" // Added padding for better tappability
           >
               Explore More Categories
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -157,4 +158,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
