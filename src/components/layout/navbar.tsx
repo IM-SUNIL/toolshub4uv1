@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -77,7 +78,8 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center">
+      <div className="container flex h-14 max-w-screen-2xl items-center pl-6"> {/* Added pl-6 */}
+        {/* Desktop Logo and Name */}
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             {/* Replace with SVG logo if available */}
@@ -88,7 +90,7 @@ export function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu Button and Logo */}
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
             <Button
@@ -99,6 +101,7 @@ export function Navbar() {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
+           {/* Mobile Logo and Name */}
            <Link href="/" className="flex items-center space-x-2 md:hidden mr-auto">
              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-primary"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.09a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             <span className="font-bold">
@@ -112,7 +115,7 @@ export function Navbar() {
           </SheetContent>
         </Sheet>
 
-        {/* Desktop Menu */}
+        {/* Desktop Menu Items */}
         <div className="hidden md:flex flex-1 items-center justify-end space-x-2">
           <nav className="flex items-center gap-1">
              <NavLinks />
