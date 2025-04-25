@@ -24,6 +24,9 @@ const categories = [
    { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' },
    { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' },
    { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' },
+   { name: 'Design Aids', icon: Brush, description: 'Color pickers, font finders, mockups' }, // Added Design Aids
+   { name: 'Marketing Helpers', icon: Zap, description: 'Email signature generators, QR codes' }, // Added Marketing Helpers
+   { name: 'Developer Tools', icon: Code, description: 'JSON formatters, Base64 encoders' }, // Added Developer Tools
    { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
    { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
    { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
@@ -51,7 +54,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[60vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden pt-10"> {/* Reduced height, Added pt-10 */}
+      <section className="w-full h-[50vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Reduced height, removed pt-10 */}
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
           {/* Apply animated text gradient class here */}
@@ -68,7 +71,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-12"> {/* Increased mb-8 to mb-12 */}
+      <section className="w-full max-w-3xl px-4 -mt-8 z-20 mb-12"> {/* Increased mb-8 to mb-12, adjusted negative margin if needed */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -81,7 +84,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Popular Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 pt-0 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
+       <section className="w-full max-w-6xl px-4 pt-0 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.slice(0, 9).map((category, index) => ( // Display first 9 categories
