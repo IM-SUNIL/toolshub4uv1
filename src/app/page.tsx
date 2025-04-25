@@ -1,11 +1,13 @@
 
+'use client';
+
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock } from 'lucide-react';
-import Image from 'next/image';
+import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Share2, Clock } from 'lucide-react'; // Added Share2, Clock
+import Link from 'next/link'; // Import Link for the button
 
 const featuredTools = [
   { name: 'AI Content Generator', icon: Zap, description: 'Generate marketing copy in seconds.', tags: ['AI', 'Writing'], link: '#' },
@@ -17,12 +19,15 @@ const featuredTools = [
 ];
 
 const categories = [
+  { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' }, // New
+  { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' }, // New
+  { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' }, // New
   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
-  { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing' }, // Added Image Tools
-  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' }, // Added Writing Aids
+  { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing' },
+  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
 ];
 
 const whyUsFeatures = [
@@ -32,6 +37,13 @@ const whyUsFeatures = [
 ];
 
 const Home: NextPage = () => {
+  // Placeholder function for button click - now runs on the client
+  const handleExploreMore = () => {
+    console.log("Explore More Categories clicked!");
+    // Add navigation logic here, e.g., router.push('/categories') or scrollIntoView
+    // Example: document.getElementById('all-categories-section')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
@@ -51,7 +63,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-8"> {/* Reduced mb-16 to mb-8 */}
+      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-8">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -63,8 +75,8 @@ const Home: NextPage = () => {
         </div>
       </section>
 
-      {/* Categories Grid Section */}
-       <section className="w-full max-w-6xl px-4 py-12 rounded-lg mt-8 mb-16"> {/* Removed background overrides */}
+      {/* Popular Categories Grid Section */}
+      <section className="w-full max-w-6xl px-4 pt-12 pb-8 mt-8 mb-8 relative">
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.map((category, index) => (
@@ -75,7 +87,23 @@ const Home: NextPage = () => {
             </Card>
           ))}
         </div>
+        {/* Blurred Gradient Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent backdrop-blur-sm pointer-events-none z-10"></div>
       </section>
+
+       {/* Explore More Categories Button Section */}
+      <section className="w-full max-w-6xl px-4 mb-16 flex justify-center -mt-8 z-20"> {/* Positioned below overlay */}
+          <Button
+              variant="outline"
+              size="lg"
+              onClick={handleExploreMore}
+              className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border" // Added subtle background and blur
+          >
+              Explore More Categories
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+          </Button>
+      </section>
+
 
       {/* Featured Tools Section */}
       <section className="w-full max-w-6xl px-4 py-16">
@@ -96,9 +124,12 @@ const Home: NextPage = () => {
                     <Badge key={tag} variant="secondary">{tag}</Badge>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" className="w-full group-hover:bg-accent group-hover:text-accent-foreground transition-colors duration-300">
-                  Visit Tool <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-                </Button>
+                 {/* Use Link for navigation if 'tool.link' is a valid path */}
+                 <Button asChild variant="outline" size="sm" className="w-full group-hover:bg-accent group-hover:text-accent-foreground transition-colors duration-300">
+                    <Link href={tool.link}>
+                      Visit Tool <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
+                    </Link>
+                 </Button>
               </CardContent>
             </Card>
           ))}
