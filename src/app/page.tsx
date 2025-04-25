@@ -49,7 +49,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[70vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden animated-gradient">
+      <section className="w-full h-[70vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden">
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
          {/* Apply animated text gradient class here */}
