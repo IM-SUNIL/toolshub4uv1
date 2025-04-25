@@ -4,8 +4,8 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      {/* Removed text-center, rely on md:text-left and flex alignment within columns */}
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 md:text-left pl-6">
+      {/* Increased left padding */}
+      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 md:text-left pl-8 md:pl-12"> {/* Increased padding */}
         {/* Quick Links */}
         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
@@ -81,8 +81,8 @@ export function Footer() {
           </div>
         </div>
       </div>
-      {/* Keep copyright centered */}
-      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-6">
+      {/* Keep copyright centered, adjust padding to match content */}
+      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-8 md:pl-12"> {/* Increased padding */}
         © {new Date().getFullYear()} Toolshub4u. All rights reserved.
       </div>
     </footer>
