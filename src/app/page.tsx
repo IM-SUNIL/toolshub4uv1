@@ -54,11 +54,12 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[50vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Reduced height, removed pt-10 */}
+      <section className="w-full h-[50vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Reduced height */}
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
           {/* Apply animated text gradient class here */}
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight animated-text-gradient"> {/* Increased mb-4 to mb-6 */}
+          {/* Added responsive text sizes: text-4xl default, md:text-5xl, lg:text-6xl */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight animated-text-gradient">
             Your Ultimate Hub for Free Online Tools.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto"> {/* Increased mb-8 to mb-10 */}
@@ -85,7 +86,7 @@ const Home: NextPage = () => {
       </section>
 
        {/* Popular Categories Grid Section */}
-       <section className="w-full max-w-6xl px-4 pt-0 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
+       <section className="w-full max-w-6xl px-4 pt-0 pb-8 mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.slice(0, 9).map((category, index) => ( // Display first 9 categories
@@ -163,4 +164,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
