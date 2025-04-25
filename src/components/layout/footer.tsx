@@ -4,7 +4,8 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* Added pl-6 for left padding */}
+      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 pl-6">
         {/* Quick Links */}
         <div>
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
@@ -83,7 +84,8 @@ export function Footer() {
            </p>
         </div>
       </div>
-      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm">
+      {/* Also added pl-6 to the copyright section for consistency */}
+      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-6">
         © {new Date().getFullYear()} Toolshub4u. All rights reserved.
       </div>
     </footer>
