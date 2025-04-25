@@ -1,3 +1,4 @@
+
 import type { NextPage } from 'next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,8 @@ const categories = [
   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
+  { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing' }, // Added Image Tools
+  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' }, // Added Writing Aids
 ];
 
 const whyUsFeatures = [
@@ -60,6 +63,20 @@ const Home: NextPage = () => {
         </div>
       </section>
 
+      {/* Categories Grid Section */}
+      <section className="w-full max-w-6xl px-4 py-16 bg-secondary dark:bg-transparent rounded-lg my-16">
+        <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          {categories.map((category, index) => (
+            <Card key={index} className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer flex flex-col h-full">
+              <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
+              <p className="text-sm text-muted-foreground flex-grow">{category.description}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
       {/* Featured Tools Section */}
       <section className="w-full max-w-6xl px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">Featured Tools</h2>
@@ -83,20 +100,6 @@ const Home: NextPage = () => {
                   Visit Tool <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
                 </Button>
               </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 py-16 bg-secondary dark:bg-transparent rounded-lg my-16">
-        <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.map((category, index) => (
-            <Card key={index} className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer h-full">
-              <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
-              <p className="text-sm text-muted-foreground">{category.description}</p>
             </Card>
           ))}
         </div>
