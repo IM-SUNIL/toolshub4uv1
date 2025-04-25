@@ -64,7 +64,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 py-12 bg-secondary dark:bg-transparent rounded-lg mt-8 mb-16"> {/* Changed my-16 to mt-8 mb-16, reduced py-16 to py-12 */}
+       <section className="w-full max-w-6xl px-4 py-12 rounded-lg mt-8 mb-16"> {/* Removed background overrides */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.map((category, index) => (
