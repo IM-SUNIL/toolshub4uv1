@@ -4,10 +4,10 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      {/* Increased left padding further */}
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left pl-12 md:pl-20"> {/* Further increased padding */}
+      {/* Centered grid container */}
+      <div className="container max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
         {/* Quick Links */}
-        <div className="flex flex-col items-center md:items-start">
+        <div className="flex flex-col items-center">
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
           <ul className="space-y-2">
             <li>
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
 
         {/* Popular Categories */}
-         <div className="flex flex-col items-center md:items-start">
+         <div className="flex flex-col items-center">
           <h4 className="font-semibold mb-4 text-lg">Popular Categories</h4>
           <ul className="space-y-2">
             <li>
@@ -66,7 +66,7 @@ export function Footer() {
         </div>
 
         {/* Socials */}
-        <div className="flex flex-col items-center md:items-start">
+        <div className="flex flex-col items-center">
           <h4 className="font-semibold mb-4 text-lg">Connect With Us</h4>
           <div className="flex space-x-4">
             <Link href="#" aria-label="LinkedIn" className="text-muted-foreground hover:text-accent transition-colors">
@@ -81,8 +81,8 @@ export function Footer() {
           </div>
         </div>
       </div>
-      {/* Align copyright padding with content */}
-      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-12 md:pl-20"> {/* Further increased padding */}
+      {/* Centered copyright */}
+      <div className="container max-w-6xl mx-auto mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm">
         © {new Date().getFullYear()} Toolshub4u. All rights reserved.
       </div>
     </footer>
