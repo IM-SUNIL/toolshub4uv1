@@ -4,10 +4,10 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      {/* Added pl-6 for left padding */}
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 pl-6">
+      {/* Added pl-6 for left padding and text-center for overall centering, md:text-left for larger screens */}
+      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left pl-6">
         {/* Quick Links */}
-        <div>
+        <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
           <ul className="space-y-2">
             <li>
@@ -34,7 +34,7 @@ export function Footer() {
         </div>
 
         {/* Popular Categories */}
-        <div>
+         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Popular Categories</h4>
           <ul className="space-y-2">
             <li>
@@ -65,8 +65,8 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* Socials */}
-        <div>
+        {/* Socials - Added flex centering for small screens */}
+        <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Connect With Us</h4>
           <div className="flex space-x-4">
             <Link href="#" aria-label="LinkedIn" className="text-muted-foreground hover:text-accent transition-colors">
@@ -81,7 +81,7 @@ export function Footer() {
           </div>
         </div>
       </div>
-      {/* Also added pl-6 to the copyright section for consistency */}
+      {/* Keep copyright centered */}
       <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-6">
         © {new Date().getFullYear()} Toolshub4u. All rights reserved.
       </div>
