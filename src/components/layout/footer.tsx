@@ -4,12 +4,12 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      {/* Added pl-6 for left padding and text-center for overall centering, md:text-left for larger screens */}
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left pl-6">
+      {/* Removed text-center, rely on md:text-left and flex alignment within columns */}
+      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 md:text-left pl-6">
         {/* Quick Links */}
         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
-          <ul className="space-y-2">
+          <ul className="space-y-2 text-center md:text-left">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
                 Submit Tool
@@ -36,7 +36,7 @@ export function Footer() {
         {/* Popular Categories */}
          <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Popular Categories</h4>
-          <ul className="space-y-2">
+          <ul className="space-y-2 text-center md:text-left">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
                 AI Tools
@@ -65,7 +65,7 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* Socials - Added flex centering for small screens */}
+        {/* Socials - Added flex centering for small screens, start alignment for medium+ */}
         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Connect With Us</h4>
           <div className="flex space-x-4">
