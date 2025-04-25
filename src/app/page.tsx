@@ -71,7 +71,8 @@ const Home: NextPage = () => {
       </section>
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-3xl px-4 -mt-8 z-20 mb-12"> {/* Increased mb-8 to mb-12, adjusted negative margin if needed */}
+      {/* Adjusted mt-4 to create space between hero button and search bar */}
+      <section className="w-full max-w-3xl px-4 mt-4 z-20 mb-12">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -83,7 +84,7 @@ const Home: NextPage = () => {
         </div>
       </section>
 
-      {/* Popular Categories Grid Section */}
+       {/* Popular Categories Grid Section */}
        <section className="w-full max-w-6xl px-4 pt-0 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
