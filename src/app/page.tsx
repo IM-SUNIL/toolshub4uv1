@@ -51,7 +51,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-16">
+      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-8"> {/* Reduced mb-16 to mb-8 */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -64,7 +64,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 py-16 bg-secondary dark:bg-transparent rounded-lg my-16">
+      <section className="w-full max-w-6xl px-4 py-12 bg-secondary dark:bg-transparent rounded-lg mt-8 mb-16"> {/* Changed my-16 to mt-8 mb-16, reduced py-16 to py-12 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.map((category, index) => (
