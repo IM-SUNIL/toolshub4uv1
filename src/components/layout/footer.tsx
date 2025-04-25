@@ -8,7 +8,7 @@ export function Footer() {
       <div className="container max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
         {/* Quick Links */}
         <div className="flex flex-col items-center">
-          <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
+          <h4 className="font-semibold mb-4 text-lg dark:text-white">Quick Links</h4>
           <ul className="space-y-2">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
@@ -35,7 +35,7 @@ export function Footer() {
 
         {/* Popular Categories */}
          <div className="flex flex-col items-center">
-          <h4 className="font-semibold mb-4 text-lg">Popular Categories</h4>
+          <h4 className="font-semibold mb-4 text-lg dark:text-white">Popular Categories</h4>
           <ul className="space-y-2">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
@@ -67,7 +67,7 @@ export function Footer() {
 
         {/* Socials */}
         <div className="flex flex-col items-center">
-          <h4 className="font-semibold mb-4 text-lg">Connect With Us</h4>
+          <h4 className="font-semibold mb-4 text-lg dark:text-white">Connect With Us</h4>
           <div className="flex space-x-4">
             <Link href="#" aria-label="LinkedIn" className="text-muted-foreground hover:text-accent transition-colors">
               <Linkedin className="h-6 w-6" />
