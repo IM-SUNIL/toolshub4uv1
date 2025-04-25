@@ -4,12 +4,12 @@ import { Github, Linkedin, Twitter } from 'lucide-react'; // Using Twitter icon 
 export function Footer() {
   return (
     <footer className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-primary-foreground py-12 mt-16">
-      {/* Increased left padding */}
-      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 md:text-left pl-8 md:pl-12"> {/* Increased padding */}
+      {/* Increased left padding further */}
+      <div className="container max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left pl-12 md:pl-20"> {/* Further increased padding */}
         {/* Quick Links */}
         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Quick Links</h4>
-          <ul className="space-y-2 text-center md:text-left">
+          <ul className="space-y-2">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
                 Submit Tool
@@ -36,7 +36,7 @@ export function Footer() {
         {/* Popular Categories */}
          <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Popular Categories</h4>
-          <ul className="space-y-2 text-center md:text-left">
+          <ul className="space-y-2">
             <li>
               <Link href="#" className="text-muted-foreground hover:text-accent transition-colors">
                 AI Tools
@@ -65,7 +65,7 @@ export function Footer() {
           </ul>
         </div>
 
-        {/* Socials - Added flex centering for small screens, start alignment for medium+ */}
+        {/* Socials */}
         <div className="flex flex-col items-center md:items-start">
           <h4 className="font-semibold mb-4 text-lg">Connect With Us</h4>
           <div className="flex space-x-4">
@@ -81,8 +81,8 @@ export function Footer() {
           </div>
         </div>
       </div>
-      {/* Keep copyright centered, adjust padding to match content */}
-      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-8 md:pl-12"> {/* Increased padding */}
+      {/* Align copyright padding with content */}
+      <div className="container max-w-6xl mt-12 pt-8 border-t border-border/30 text-center text-muted-foreground text-sm pl-12 md:pl-20"> {/* Further increased padding */}
         © {new Date().getFullYear()} Toolshub4u. All rights reserved.
       </div>
     </footer>
