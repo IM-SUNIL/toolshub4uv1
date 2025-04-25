@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { NextPage } from 'next';
@@ -27,7 +28,7 @@ const categories = [
    { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
    { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
    { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
-   { name: 'Image Tools', icon: Brush, description: 'Background removal, resizing, filters' },
+   { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing, filters' }, // Changed icon to Scissors
    { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
 ];
 
@@ -50,14 +51,14 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[60vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Reduced height */}
+      <section className="w-full h-[60vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden pt-10"> {/* Reduced height, Added pt-10 */}
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
           {/* Apply animated text gradient class here */}
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight animated-text-gradient">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight animated-text-gradient"> {/* Increased mb-4 to mb-6 */}
             Your Ultimate Hub for Free Online Tools.
           </h1>
-          <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto"> {/* Increased mb-8 to mb-10 */}
             AI Tools, PDF Converters, Resume Builders and more – all in one place.
           </p>
           <Button size="lg" className="group transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30">
@@ -67,7 +68,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-8">
+      <section className="w-full max-w-3xl px-4 -mt-10 z-20 mb-12"> {/* Increased mb-8 to mb-12 */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -80,7 +81,7 @@ const Home: NextPage = () => {
       </section>
 
       {/* Popular Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 pt-12 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8, Removed background class */}
+      <section className="w-full max-w-6xl px-4 pt-0 pb-8 rounded-lg mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {categories.slice(0, 9).map((category, index) => ( // Display first 9 categories
@@ -158,3 +159,4 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
