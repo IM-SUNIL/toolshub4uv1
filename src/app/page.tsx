@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Share2, Clock } from 'lucide-react'; // Added Share2, Clock
+import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Share2, Clock, Brush } from 'lucide-react'; // Added Share2, Clock, Brush
 import Link from 'next/link'; // Import Link for the button
+import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 
 const featuredTools = [
   { name: 'AI Content Generator', icon: Zap, description: 'Generate marketing copy in seconds.', tags: ['AI', 'Writing'], link: '#' },
@@ -19,14 +20,14 @@ const featuredTools = [
 ];
 
 const categories = [
-  { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' }, // New
+   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' }, // New
   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' }, // New
   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' }, // New
   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
-  { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing' },
+  { name: 'Image Tools', icon: Brush, description: 'Background removal, resizing, filters' }, // Use Brush for Image Tools
   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
 ];
 
@@ -37,11 +38,12 @@ const whyUsFeatures = [
 ];
 
 const Home: NextPage = () => {
+  const router = useRouter(); // Initialize router
+
   // Placeholder function for button click - now runs on the client
   const handleExploreMore = () => {
     console.log("Explore More Categories clicked!");
-    // Add navigation logic here, e.g., router.push('/categories') or scrollIntoView
-    // Example: document.getElementById('all-categories-section')?.scrollIntoView({ behavior: 'smooth' });
+    router.push('/categories'); // Navigate to /categories page
   };
 
   return (
@@ -50,7 +52,8 @@ const Home: NextPage = () => {
       <section className="w-full h-[70vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden animated-gradient">
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
-         <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-accent">
+         {/* Apply animated text gradient class here */}
+         <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight leading-tight animated-text-gradient">
             Your Ultimate Hub for Free Online Tools.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
@@ -76,10 +79,10 @@ const Home: NextPage = () => {
       </section>
 
       {/* Popular Categories Grid Section */}
-      <section className="w-full max-w-6xl px-4 pt-12 pb-8 mt-8 mb-8 relative">
+      <section className="w-full max-w-6xl px-4 pt-12 pb-8 mt-0 mb-8 relative"> {/* Removed mt-8 */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.map((category, index) => (
+          {categories.slice(0, 9).map((category, index) => ( // Limit to 9 categories
             <Card key={index} className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer flex flex-col h-full">
               <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
@@ -97,7 +100,7 @@ const Home: NextPage = () => {
               variant="outline"
               size="lg"
               onClick={handleExploreMore}
-              className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border" // Added subtle background and blur
+              className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border px-6 py-3 sm:px-8" // Added padding for better tappability
           >
               Explore More Categories
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -154,3 +157,4 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
