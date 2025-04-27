@@ -83,7 +83,6 @@ export default function AdminLoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="sunil.x.rajput" // Removed "e.g., "
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
