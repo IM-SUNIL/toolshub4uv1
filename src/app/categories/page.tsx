@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, Share2, Clock, Brush } from 'lucide-react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { motion } from 'framer-motion'; // Import framer-motion for animations
+
 
 // Define category data (consider moving to a shared location like src/lib/data/categories.ts)
 const allCategories = [
@@ -27,26 +27,12 @@ const allCategories = [
    // Add more categories as needed
 ];
 
-// Framer Motion variants for card animation
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.05, // Staggered delay
-      duration: 0.3,
-      ease: "easeOut",
-    },
-  }),
-};
-
-
 const CategoriesPage: NextPage = () => {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredCategories = allCategories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,8 +40,7 @@ const CategoriesPage: NextPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen pt-16 px-4 md:px-10 pb-10">
-       <h1 className="text-3xl sm:text-4xl font-bold mb-8 text-center">Browse Popular Categories</h1>
+    <div className="flex flex-col items-center min-h-screen pt-10 px-4 md:px-10 pb-10"> {/* Reduced pt */}
 
       {/* Search Bar Section */}
       <section className="w-full max-w-xl mb-12">
@@ -77,24 +62,15 @@ const CategoriesPage: NextPage = () => {
         {filteredCategories.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
             {filteredCategories.map((category, index) => (
-               <motion.div
-                key={category.name}
-                custom={index}
-                initial="hidden"
-                animate="visible"
-                variants={cardVariants}
-                className="h-full" // Ensure motion div takes full height
-              >
-                <Link href={category.link || '#'} className="block h-full">
+                <Link href={category.link || '#'} key={category.name} className="block h-full group">
                     <Card className="text-center p-4 sm:p-6 bg-card hover:border-accent border border-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/20 cursor-pointer flex flex-col items-center justify-start h-full"> {/* Ensure card takes full height */}
-                        <category.icon className="h-8 w-8 sm:h-10 sm:w-10 text-accent mb-3 sm:mb-4" aria-label={`${category.name} icon`} />
+                        <category.icon className="h-8 w-8 sm:h-10 sm:w-10 text-accent mb-3 sm:mb-4 group-hover:scale-110 transition-transform" aria-label={`${category.name} icon`} />
                         <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">{category.name}</h3>
                         {category.description && (
-                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{category.description}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{category.description}</p> // Allow 2 lines
                         )}
                     </Card>
                 </Link>
-              </motion.div>
             ))}
           </div>
         ) : (
