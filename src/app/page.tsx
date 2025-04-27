@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import type { NextPage } from 'next';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock } from 'lucide-react';
+import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Image as ImageIcon } from 'lucide-react'; // Added ImageIcon
 import Link from 'next/link'; // Import Link for navigation
 
 const featuredTools = [
@@ -20,13 +19,13 @@ const featuredTools = [
 ];
 
 const categories = [
-  { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs', link: '/categories/pdf-tools.html' },
-  { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants', link: '/categories/ai-tools.html' },
-  { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets', link: '/categories/coding-utilities.html' }, // Assuming this page exists
-  { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online', link: '/categories/video-tools.html' },
-  { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing', link: '/categories/image-tools.html' },
-  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers', link: '/categories/writing-aids.html' }, // Assuming this page exists
-  // Add more categories with their respective HTML links
+  { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs', link: '/categories/pdf-tools', slug: 'pdf-tools' }, // Changed link to slug/param based if needed
+  { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants', link: '/categories/ai-tools', slug: 'ai-tools' },
+  { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets', link: '/categories/coding-utilities', slug: 'coding-utilities' },
+  { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online', link: '/categories/video-tools', slug: 'video-tools' },
+  { name: 'Image Tools', icon: ImageIcon, description: 'Background removal, resizing', link: '/categories/image-tools', slug: 'image-tools' }, // Used ImageIcon
+  { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers', link: '/categories/writing-aids', slug: 'writing-aids' },
+  // Add more categories with their respective links/slugs
 ];
 
 
@@ -37,6 +36,12 @@ const whyUsFeatures = [
 ];
 
 const Home: NextPage = () => {
+
+  const handleExploreMore = () => {
+    console.log("Explore More Categories clicked!");
+    // Navigation will be handled by the Link component now
+  };
+
 
   return (
     <div className="flex flex-col items-center">
@@ -50,9 +55,12 @@ const Home: NextPage = () => {
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-3xl mx-auto px-4"> {/* Increased mb-8 to mb-10 */}
             AI Tools, PDF Converters, Resume Builders and more – all in one place.
           </p>
-          <Button size="lg" className="group transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30">
-            Explore Tools <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-          </Button>
+          {/* Wrap Button with Link for navigation */}
+          <Link href="#featured-tools" passHref> {/* Example: Link to featured tools section */}
+              <Button size="lg" className="group transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30">
+                  Explore Tools <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Button>
+          </Link>
         </div>
       </section>
 
@@ -73,17 +81,18 @@ const Home: NextPage = () => {
        {/* Popular Categories Grid Section */}
        <section className="w-full max-w-6xl px-4 pt-0 pb-8 mb-8 relative"> {/* Removed background class, adjusted pt */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-6"> {/* Changed back to 3 columns for consistency */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-6"> {/* Changed back to 3 columns */}
           {categories.slice(0, 9).map((category, index) => ( // Display first 9 popular categories
-             <a href={category.link || '#'} key={index} className="block h-full group"> {/* Use standard anchor tag for HTML links */}
-                <Card className="text-center p-6 bg-card hover:border-accent border border-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/20 cursor-pointer flex flex-col items-center justify-start h-full"> {/* Ensure full height, hover effects */}
+             // Link to a filtered tool list page or a specific category page if it exists
+             <Link href={`/tools?category=${category.slug}`} key={index} className="block h-full group">
+                <Card className="text-center p-6 bg-card hover:border-accent border border-transparent transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-accent/20 cursor-pointer flex flex-col items-center justify-start h-full rounded-lg"> {/* Ensure full height, hover effects */}
                   <category.icon className="h-10 w-10 text-accent mx-auto mb-4 group-hover:scale-110 transition-transform" />
                   <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
                   {category.description && (
                      <p className="text-sm text-muted-foreground flex-grow">{category.description}</p>
                   )}
                 </Card>
-            </a>
+            </Link>
           ))}
         </div>
         {/* Blurred Gradient Overlay */}
@@ -92,24 +101,28 @@ const Home: NextPage = () => {
 
       {/* Explore More Categories Button Section */}
        <section className="w-full max-w-6xl px-4 mb-16 flex justify-center -mt-8 z-20"> {/* Positioned below overlay */}
-           {/* Changed Link to standard anchor tag for static HTML navigation */}
-           <a
-              href="/categories.html" // Link directly to the static categories HTML file
-              className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 px-6 py-3 sm:px-8 sm:py-4 group hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border" // Applied button styles directly
-           >
-               Explore More Categories
-               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
-           </a>
+           {/* Changed to Next.js Link component */}
+           <Link href="/categories" passHref>
+              <Button
+                 variant="outline"
+                 size="lg" // Increased size for better tap target
+                 onClick={handleExploreMore} // Keep onClick if needed for analytics etc.
+                 className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border h-11 px-6 py-3 sm:px-8 sm:py-4" // Adjusted styles
+              >
+                 Explore More Categories
+                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Button>
+           </Link>
       </section>
 
 
       {/* Featured Tools Section */}
-      <section className="w-full max-w-6xl px-4 py-16">
+      <section id="featured-tools" className="w-full max-w-6xl px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12">Featured Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {featuredTools.map((tool, index) => (
              <Link key={index} href={tool.link} className="block h-full group">
-                <Card className="bg-card hover:border-accent transition-colors duration-300 group transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col h-full">
+                <Card className="bg-card hover:border-accent transition-colors duration-300 group transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col h-full rounded-lg">
                   <CardHeader>
                     <div className="flex items-center gap-3 mb-2">
                        <tool.icon className="h-6 w-6 text-accent" />
@@ -123,7 +136,7 @@ const Home: NextPage = () => {
                         <Badge key={tag} variant="secondary">{tag}</Badge>
                       ))}
                     </div>
-                     {/* Use the Button directly, Link wrapper handles navigation */}
+                     {/* Button remains inside Link for styling, Link handles navigation */}
                      <Button variant="outline" size="sm" className="w-full group-hover:bg-accent group-hover:text-accent-foreground transition-colors duration-300 mt-auto">
                        Visit Tool <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform duration-300" />
                      </Button>
