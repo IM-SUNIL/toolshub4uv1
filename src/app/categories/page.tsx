@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, Share2, Clock, Brush } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion'; // Import framer-motion for animations
+import type { Metadata } from 'next';
 
 
 // Define category data (consider moving to a shared location like src/lib/data/categories.ts)
@@ -58,7 +59,7 @@ const CategoriesPage: NextPage = () => {
     <div className="flex flex-col items-center min-h-screen pt-[2px] px-4 md:px-10 pb-10"> {/* Adjusted top padding to 2px */}
 
       {/* Search Bar Section */}
-      <section className="w-full max-w-xl my-8"> {/* Added margin-top and margin-bottom */}
+      <section className="w-full max-w-xl mt-4 mb-8"> {/* Reduced margin-top to mt-4 */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -104,6 +105,5 @@ const CategoriesPage: NextPage = () => {
     </div>
   );
 };
-
 
 export default CategoriesPage;
