@@ -55,7 +55,7 @@ const CategoriesPage: NextPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen pt-[2px] px-4 md:px-10 pb-10"> {/* Adjusted top padding to 2px */}
+    <div className="flex flex-col items-center min-h-screen pt-[2px] px-4 md:px-10 pb-10"> {/* Ensured top padding is 2px */}
 
       {/* Search Bar Section */}
       {/* Adjusted margin-top from mt-4 to mt-2 */}
@@ -107,3 +107,9 @@ const CategoriesPage: NextPage = () => {
 };
 
 export default CategoriesPage;
+
+// Metadata can be defined in layout.tsx or a dedicated metadata file if this remains a client component
+// export const metadata: Metadata = {
+//   title: 'Browse Categories - Toolshub4u',
+//   description: 'Explore all categories of free online tools available on Toolshub4u.',
+// };
