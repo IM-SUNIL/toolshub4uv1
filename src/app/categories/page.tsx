@@ -40,7 +40,7 @@ const CategoriesPage: NextPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen pt-10 px-4 md:px-10 pb-10"> {/* Reduced pt */}
+    <div className="flex flex-col items-center min-h-screen pt-4 px-4 md:px-10 pb-10"> {/* Reduced pt from pt-10 to pt-4 */}
 
       {/* Search Bar Section */}
       <section className="w-full max-w-xl mb-12">
