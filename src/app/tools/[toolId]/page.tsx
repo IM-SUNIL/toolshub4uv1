@@ -2,7 +2,7 @@
 // This file remains a Server Component - DO NOT add 'use client' here
 
 import type { Metadata } from 'next';
-import { getToolById } from '@/lib/data/tools.tsx'; // Import mock data and helpers
+import { getToolById } from '@/lib/data/tools'; // Import data helpers from tools.ts
 import ToolDetailClient from '@/components/tools/tool-detail-client'; // Import the client component
 
 // Example function to generate Metadata (Needs to be outside the client component)

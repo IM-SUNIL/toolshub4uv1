@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+// No Label needed directly if using FormLabel
 // Import Select components if needed for Parent Category
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -21,27 +21,43 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Zap, FileText, Scissors, Video, Code } from 'lucide-react'; // Import icons
 
+// Helper function to generate a simple slug
+const generateSlug = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+};
+
+// Map icon names to components for easier lookup
+const iconMap: { [key: string]: React.ElementType } = {
+    Zap,
+    FileText,
+    Scissors,
+    Video,
+    Code,
+};
 
 // Define Zod schema for validation
 const categoryFormSchema = z.object({
   categoryName: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }).max(200, { message: 'Description cannot exceed 200 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
-  // parentCategory: z.string().optional(), // Optional parent category - keep commented for now
-  tags: z.string().optional().or(z.literal('')), // Optional tags
+  iconName: z.string({ required_error: 'Please select an icon.' }), // Icon name selection
+  tags: z.string().optional().or(z.literal('')), // Optional tags as comma-separated string
 });
 
 type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
 interface AddCategoryFormProps {
-  // parentCategories?: { value: string; label: string }[]; // Pass if using parent categories
   onSuccess: () => void; // Callback on successful submission
   onClose: () => void; // Callback to close the dialog/form
 }
 
-export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onClose }: AddCategoryFormProps) {
+export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormProps) {
   const { toast } = useToast();
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
@@ -49,7 +65,7 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
       categoryName: '',
       description: '',
       imageUrl: '',
-      // parentCategory: undefined,
+      iconName: undefined,
       tags: '',
     },
   });
@@ -57,35 +73,53 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
 
   async function onSubmit(data: CategoryFormValues) {
     setIsSubmitting(true);
-    console.log('Category Form Data Submitted:', data); // Log data for now
 
-    // Simulate API call/saving data (replace with actual DB save later)
-    // Example using localStorage:
+    const newCategory = {
+        slug: generateSlug(data.categoryName), // Generate slug
+        name: data.categoryName,
+        description: data.description,
+        iconName: data.iconName, // Store the icon name string
+        imageURL: data.imageUrl || `https://picsum.photos/seed/${generateSlug(data.categoryName)}-cat/600/400`, // Use slug for seed or default
+        tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
+        createdAt: new Date().toISOString(), // Add timestamp
+    };
+
+    console.log('New Category Data:', newCategory); // Log the processed data
+
+    // **Placeholder for saving data:**
+    // In a real app, send `newCategory` to your backend API
+    // to update `categories.json` or save to a database.
+    // Example (conceptual):
     // try {
-    //   const categories = JSON.parse(localStorage.getItem('categories')) || [];
-    //   const newCategory = { ...data, id: `cat-${Date.now()}`, createdAt: new Date().toISOString() }; // Assign basic ID
-    //   categories.push(newCategory);
-    //   localStorage.setItem('categories', JSON.stringify(categories));
+    //   const response = await fetch('/api/add-category', { // Your backend endpoint
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(newCategory),
+    //   });
+    //   if (!response.ok) throw new Error('Failed to save category');
+    //   toast({ title: 'Success!', description: `Category "${data.categoryName}" added.` });
+    //   onSuccess();
+    //   form.reset();
     // } catch (error) {
-    //   console.error("Failed to save category to localStorage", error);
+    //   console.error("Failed to save category", error);
     //   toast({ title: 'Error', description: 'Failed to save category.', variant: 'destructive' });
+    // } finally {
     //   setIsSubmitting(false);
-    //   return;
     // }
 
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-
+    // Simulate delay for now
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setIsSubmitting(false);
     toast({
-      title: 'Success!',
-      description: `Category "${data.categoryName}" added successfully.`,
+      title: 'Success (Simulated)!',
+      description: `Category "${data.categoryName}" added (Check console for data).`,
     });
-    onSuccess(); // Call the success callback (e.g., close dialog)
-    form.reset(); // Reset form after successful submission
+    onSuccess();
+    form.reset();
   }
 
   return (
-    <ScrollArea className="max-h-[70vh] pr-6"> {/* Added ScrollArea */}
+    <ScrollArea className="max-h-[70vh] pr-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Category Name */}
@@ -118,6 +152,40 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
             )}
           />
 
+          {/* Icon Selection */}
+           <FormField
+            control={form.control}
+            name="iconName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category Icon</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an icon" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Object.keys(iconMap).map((iconKey) => {
+                       const IconComp = iconMap[iconKey];
+                       return (
+                           <SelectItem key={iconKey} value={iconKey}>
+                             <div className="flex items-center gap-2">
+                               <IconComp className="h-4 w-4" />
+                               {iconKey}
+                             </div>
+                           </SelectItem>
+                       );
+                    })}
+                  </SelectContent>
+                </Select>
+                 <FormDescription>Visual representation for the category.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+
           {/* Image URL (Optional) */}
           <FormField
             control={form.control}
@@ -128,40 +196,11 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
                 <FormControl>
                   <Input type="url" placeholder="https://example.com/category-icon.png" {...field} />
                 </FormControl>
-                <FormDescription>URL for the category's visual representation.</FormDescription>
+                <FormDescription>URL for the category's visual representation. Uses Picsum placeholder if empty.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/* Add File Upload if needed */}
-
-          {/* Parent Category (Optional - Uncomment if needed) */}
-          {/* <FormField
-            control={form.control}
-            name="parentCategory"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Parent Category (Optional)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a parent category (optional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    {parentCategories?.map((cat) => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>Select if this is a sub-category.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          /> */}
 
           {/* Tags (Optional) */}
           <FormField

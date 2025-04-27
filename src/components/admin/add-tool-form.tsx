@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+// No Label needed directly if using FormLabel
 import {
   Select,
   SelectContent,
@@ -26,20 +26,29 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { ScrollArea } from '@/components/ui/scroll-area'; // Import ScrollArea
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+// Helper function to generate a simple slug
+const generateSlug = (name: string) => {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+};
+
 
 // Define Zod schema for validation
 const toolFormSchema = z.object({
   toolName: z.string().min(2, { message: 'Tool name must be at least 2 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
-  rating: z.coerce.number().min(1, { message: 'Rating must be between 1 and 5.' }).max(5, { message: 'Rating must be between 1 and 5.' }),
-  category: z.string({ required_error: 'Please select a category.' }),
+  rating: z.coerce.number().min(0).max(5, { message: 'Rating must be between 0 and 5.' }), // Allow 0 rating
+  categorySlug: z.string({ required_error: 'Please select a category.' }), // Changed name to categorySlug
   priceType: z.enum(['Free', 'Paid'], { required_error: 'Please select a price type.' }),
   shortDescription: z.string().min(10, { message: 'Short description must be at least 10 characters.' }).max(160, { message: 'Short description must not exceed 160 characters.' }),
   fullDescription: z.string().min(20, { message: 'Full description must be at least 20 characters.' }),
-  usageSteps: z.string().optional().or(z.literal('')), // Optional steps
+  usageSteps: z.string().optional().or(z.literal('')), // Optional steps as single string for now
   websiteLink: z.string().url({ message: 'Please enter a valid website URL.' }),
-  tags: z.string().optional().or(z.literal('')), // Optional tags
+  tags: z.string().optional().or(z.literal('')), // Optional tags as comma-separated string
 });
 
 type ToolFormValues = z.infer<typeof toolFormSchema>;
@@ -54,11 +63,11 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
   const { toast } = useToast();
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
-    defaultValues: { // Set sensible defaults
+    defaultValues: {
       toolName: '',
       imageUrl: '',
-      rating: 4.0, // Default rating
-      category: undefined,
+      rating: 4.0,
+      categorySlug: undefined,
       priceType: 'Free',
       shortDescription: '',
       fullDescription: '',
@@ -71,36 +80,62 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
 
   async function onSubmit(data: ToolFormValues) {
     setIsSubmitting(true);
-    console.log('Form Data Submitted:', data); // Log data for now
 
-    // Simulate API call/saving data (replace with actual DB save later)
-    // Example using localStorage:
+    const newTool = {
+        id: generateSlug(data.toolName), // Generate slug as ID
+        name: data.toolName,
+        image: data.imageUrl || `https://picsum.photos/seed/${generateSlug(data.toolName)}/600/400`, // Use slug for seed or default
+        categorySlug: data.categorySlug,
+        isFree: data.priceType === 'Free',
+        rating: data.rating,
+        summary: data.shortDescription,
+        description: data.fullDescription,
+        // Convert usage steps string (one per line) into array of objects
+        usageSteps: data.usageSteps?.split('\n').filter(step => step.trim() !== '').map(step => ({ text: step.trim() })) || [],
+        websiteLink: data.websiteLink,
+        tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
+        // comments: [], // Initialize with empty comments if needed
+        // relatedToolIds: [], // Initialize related IDs if needed
+        createdAt: new Date().toISOString(), // Add timestamp
+    };
+
+
+    console.log('New Tool Data:', newTool); // Log the processed data
+
+    // **Placeholder for saving data:**
+    // In a real app, you would send `newTool` to your backend API
+    // which would then update the `tools.json` file or save to a database.
+    // Example (conceptual - requires backend logic):
     // try {
-    //   const tools = JSON.parse(localStorage.getItem('tools')) || [];
-    //   const newTool = { ...data, id: `tool-${Date.now()}`, createdAt: new Date().toISOString() }; // Assign basic ID
-    //   tools.push(newTool);
-    //   localStorage.setItem('tools', JSON.stringify(tools));
+    //   const response = await fetch('/api/add-tool', { // Your backend endpoint
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(newTool),
+    //   });
+    //   if (!response.ok) throw new Error('Failed to save tool');
+    //   toast({ title: 'Success!', description: `Tool "${data.toolName}" added.` });
+    //   onSuccess();
+    //   form.reset();
     // } catch (error) {
-    //   console.error("Failed to save tool to localStorage", error);
+    //   console.error("Failed to save tool", error);
     //   toast({ title: 'Error', description: 'Failed to save tool.', variant: 'destructive' });
+    // } finally {
     //   setIsSubmitting(false);
-    //   return;
     // }
 
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-
+    // Simulate delay for now
+    await new Promise(resolve => setTimeout(resolve, 1000));
     setIsSubmitting(false);
     toast({
-      title: 'Success!',
-      description: `Tool "${data.toolName}" added successfully.`,
+      title: 'Success (Simulated)!',
+      description: `Tool "${data.toolName}" added (Check console for data).`,
     });
-    onSuccess(); // Call the success callback (e.g., close dialog)
-    form.reset(); // Reset form after successful submission
+    onSuccess();
+    form.reset();
   }
 
   return (
-     // Use ScrollArea to make the form content scrollable if it exceeds viewport height
-     <ScrollArea className="max-h-[70vh] pr-6"> {/* Added pr-6 for scrollbar spacing */}
+     <ScrollArea className="max-h-[70vh] pr-6">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Tool Name */}
@@ -128,12 +163,11 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
                 <FormControl>
                   <Input type="url" placeholder="https://example.com/image.png" {...field} />
                 </FormControl>
-                 <FormDescription>Enter the URL of the tool's image or logo.</FormDescription>
+                 <FormDescription>Enter the URL of the tool's image or logo. Uses Picsum placeholder if empty.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-          {/* Or Add File Upload component here instead of URL if needed */}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
              {/* Rating */}
@@ -142,9 +176,9 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
                 name="rating"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Rating (1-5)</FormLabel>
+                    <FormLabel>Rating (0-5)</FormLabel>
                     <FormControl>
-                    <Input type="number" step="0.1" min="1" max="5" placeholder="e.g., 4.5" {...field} />
+                    <Input type="number" step="0.1" min="0" max="5" placeholder="e.g., 4.5" {...field} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -154,7 +188,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
              {/* Category */}
              <FormField
                 control={form.control}
-                name="category"
+                name="categorySlug" // Ensure this matches the schema
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Category</FormLabel>
@@ -209,7 +243,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
             name="shortDescription"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Short Description</FormLabel>
+                <FormLabel>Short Description (Summary)</FormLabel>
                 <FormControl>
                   <Textarea placeholder="A brief summary for the tool card (max 160 chars)" {...field} />
                 </FormControl>

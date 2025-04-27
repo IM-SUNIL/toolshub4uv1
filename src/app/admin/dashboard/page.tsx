@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
+import categoriesData from '@/lib/data/categories.json'; // Import categories JSON
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -23,15 +24,11 @@ export default function AdminDashboardPage() {
   const [isAddToolDialogOpen, setIsAddToolDialogOpen] = React.useState(false);
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = React.useState(false);
 
-  // Mock categories data - replace with actual data fetching later
-  const categories = [
-    { value: 'ai-tools', label: 'AI Tools' },
-    { value: 'pdf-tools', label: 'PDF Tools' },
-    { value: 'image-tools', label: 'Image Tools' },
-    { value: 'video-tools', label: 'Video Tools' },
-    { value: 'coding-utilities', label: 'Coding Utilities' },
-    { value: 'career', label: 'Career' },
-  ];
+  // Map categories from JSON for the dropdown
+  const categoriesForDropdown = categoriesData.map(cat => ({
+    value: cat.slug,
+    label: cat.name,
+  }));
 
   React.useEffect(() => {
     // Check authentication status on component mount
@@ -78,7 +75,7 @@ export default function AdminDashboardPage() {
                 </DialogDescription>
               </DialogHeader>
               <AddToolForm
-                categories={categories}
+                categories={categoriesForDropdown} // Pass fetched categories
                 onSuccess={() => setIsAddToolDialogOpen(false)} // Close dialog on success
                 onClose={() => setIsAddToolDialogOpen(false)} // Close dialog on cancel
                />
@@ -100,7 +97,13 @@ export default function AdminDashboardPage() {
                  </DialogDescription>
                </DialogHeader>
                <AddCategoryForm
-                 onSuccess={() => setIsAddCategoryDialogOpen(false)} // Close dialog on success
+                 // In a real app, you'd refetch categories or update state here
+                 onSuccess={() => {
+                     setIsAddCategoryDialogOpen(false);
+                     // Potentially trigger a refetch of categories for the Add Tool form dropdown
+                     // For now, simply closing the dialog.
+                     // You might need state management or context to update categories globally.
+                 }}
                  onClose={() => setIsAddCategoryDialogOpen(false)} // Close dialog on cancel
                />
             </DialogContent>
@@ -120,8 +123,10 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-4">Use the buttons above to add new tools or categories.</p>
+           <p className="text-muted-foreground">Note: Currently, adding data saves locally. Implement backend/API calls to persist data (e.g., to Firebase Firestore or a server endpoint).</p>
            <p>Future enhancements could include:</p>
            <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
+             <li>Saving data to a database (like Firebase)</li>
              <li>Editing existing tools and categories</li>
              <li>Deleting tools and categories</li>
              <li>Viewing site statistics</li>

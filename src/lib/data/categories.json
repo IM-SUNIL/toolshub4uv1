@@ -1,0 +1,59 @@
+
+[
+  {
+    "slug": "ai-tools",
+    "name": "AI Tools",
+    "description": "Generators, enhancers, assistants",
+    "iconName": "Zap",
+    "imageURL": "https://picsum.photos/seed/ai-cat/600/400",
+    "tags": ["ai", "generators", "assistants", "machine learning"]
+  },
+  {
+    "slug": "pdf-tools",
+    "name": "PDF Tools",
+    "description": "Convert, merge, split PDFs",
+    "iconName": "FileText",
+    "imageURL": "https://picsum.photos/seed/pdf-cat/600/400",
+    "tags": ["pdf", "converter", "editor", "document"]
+  },
+  {
+    "slug": "image-tools",
+    "name": "Image Tools",
+    "description": "Background removal, resizing",
+    "iconName": "Scissors",
+    "imageURL": "https://picsum.photos/seed/img-cat/600/400",
+    "tags": ["image", "editor", "resizer", "graphics"]
+  },
+  {
+    "slug": "video-tools",
+    "name": "Video Tools",
+    "description": "Cut, trim, merge videos online",
+    "iconName": "Video",
+    "imageURL": "https://picsum.photos/seed/vid-cat/600/400",
+    "tags": ["video", "editor", "converter", "multimedia"]
+  },
+  {
+    "slug": "coding-utilities",
+    "name": "Coding Utilities",
+    "description": "Formatters, linters, snippets",
+    "iconName": "Code",
+    "imageURL": "https://picsum.photos/seed/code-cat/600/400",
+    "tags": ["code", "developer", "utility", "formatter"]
+  },
+  {
+    "slug": "writing-aids",
+    "name": "Writing Aids",
+    "description": "Grammar checkers, summarizers",
+    "iconName": "FileText",
+    "imageURL": "https://picsum.photos/seed/write-cat/600/400",
+    "tags": ["writing", "grammar", "content", "text"]
+  },
+  {
+    "slug": "career",
+    "name": "Career Tools",
+    "description": "Resume builders, job search tools",
+    "iconName": "FileText",
+    "imageURL": "https://picsum.photos/seed/career-cat/600/400",
+    "tags": ["career", "resume", "jobs", "professional"]
+  }
+]

@@ -3,17 +3,18 @@
 'use client'; // Ensure this component is marked as a Client Component
 
 import type { NextPage } from 'next';
-import { useParams, useRouter } from 'next/navigation'; // Use next/navigation for App Router
+import { useRouter } from 'next/navigation'; // Use next/navigation for App Router
 import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { getToolById, getRelatedTools, renderStars, type Tool } from '@/lib/data/tools.tsx'; // Import mock data and helpers
+import type { Tool } from '@/lib/data/tools'; // Import Tool type
+import { getToolById, getRelatedTools, renderStars, categoryDetailsMap } from '@/lib/data/tools'; // Import data helpers, including categoryDetailsMap
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Home, ChevronRight, Star, Send, ArrowRight } from 'lucide-react'; // Import necessary icons
+import { ArrowLeft, Home, ChevronRight, Star, Send, ArrowRight, CheckCircle } from 'lucide-react'; // Import necessary icons
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
 import { useToast } from "@/hooks/use-toast"; // Corrected import path
 
@@ -33,12 +34,14 @@ interface ToolDetailClientProps {
   toolId: string;
 }
 
-const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
-  // Removed useParams() as toolId is passed as a prop now
-  const router = useRouter();
-  const { toast } = useToast(); // Get toast function
+// Define the extended Tool type used within this component
+type ToolWithCategoryDetails = Tool & { categoryName: string; categoryIcon: React.ElementType };
 
-  const [tool, setTool] = React.useState<Tool | null | undefined>(undefined); // undefined initially, null if not found, Tool if found
+const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [tool, setTool] = React.useState<ToolWithCategoryDetails | null | undefined>(undefined); // undefined initially, null if not found, Tool if found
   const [relatedTools, setRelatedTools] = React.useState<Tool[]>([]);
   const [newComment, setNewComment] = React.useState({ name: '', comment: '' });
   const [comments, setComments] = React.useState<Tool['comments']>([]);
@@ -51,7 +54,8 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
       setTool(fetchedTool); // Will be undefined if not found initially
       if (fetchedTool) {
         setComments(fetchedTool.comments || []);
-        setRelatedTools(getRelatedTools(fetchedTool));
+        // Ensure getRelatedTools is called with the base Tool type
+        setRelatedTools(getRelatedTools(fetchedTool as Tool));
       } else {
           setTool(null); // Explicitly set to null if not found after check
       }
@@ -88,7 +92,6 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
       toast({
           title: "Success",
           description: "Your comment has been posted!",
-          // Removed className as it's not a standard prop for toast
       });
     }, 500); // Simulate network delay
   };
@@ -139,6 +142,10 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
   }
 
   // Tool Found - Render Detail Page
+  const CategoryIcon = tool.categoryIcon || Star; // Fallback icon if needed
+  const UsageStepIcon = CheckCircle; // Using CheckCircle for all steps for now
+
+
   return (
     <div className="container mx-auto px-4 py-8 pt-[2px] md:pt-[2px] max-w-6xl"> {/* Adjusted padding-top */}
        {/* Breadcrumbs */}
@@ -147,9 +154,9 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
           <Home className="h-4 w-4 mr-1" /> Home
         </Link>
         <ChevronRight className="h-4 w-4 mx-1" />
-        {/* Assuming category link would go to a general categories page */}
-        <Link href="/categories" className="hover:text-accent transition-colors">
-          {tool.category || 'Categories'}
+        {/* Link to the category page using the slug */}
+        <Link href={`/categories/${tool.categorySlug}`} className="hover:text-accent transition-colors">
+          {tool.categoryName || 'Categories'}
         </Link>
          <ChevronRight className="h-4 w-4 mx-1" />
         <span className="font-medium text-foreground">{tool.name}</span>
@@ -177,7 +184,7 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
           </h1>
           <div className="flex flex-wrap items-center gap-2">
              <Badge variant="secondary" className="text-sm py-1 px-3 flex items-center gap-1">
-               {tool.categoryIcon && <tool.categoryIcon className="h-4 w-4"/>} {tool.category}
+               {<CategoryIcon className="h-4 w-4"/>} {tool.categoryName}
              </Badge>
              <Badge variant={tool.isFree ? 'default' : 'destructive'} className={`text-sm py-1 px-3 ${tool.isFree ? 'bg-green-600/20 text-green-400 border-green-600/30 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 border-red-600/30 hover:bg-red-600/30'}`}>
                {tool.isFree ? 'Free' : 'Paid'}
@@ -190,11 +197,10 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
             {tool.summary}
           </p>
-           {/* Assuming the tool object has a direct website link */}
-           {tool.id && ( // Check if tool.id exists (replace with actual link property if different)
+           {/* Use the actual website link from the tool data */}
+           {tool.websiteLink && (
                 <Button size="lg" asChild className="mt-4 w-full sm:w-auto group transition-transform duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30">
-                    {/* Use a generic link for now, replace tool.websiteLink with the actual property */}
-                    <a href={`#`} target="_blank" rel="noopener noreferrer">
+                    <a href={tool.websiteLink} target="_blank" rel="noopener noreferrer">
                        Visit Tool Website <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
                     </a>
                 </Button>
@@ -296,41 +302,44 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
             <section>
                 <h2 className="text-2xl font-bold mb-6 border-b border-border/20 pb-2">Related Tools</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedTools.map((relatedTool) => (
-                    <Link key={relatedTool.id} href={`/tools/${relatedTool.id}`} className="block group">
-                        <Card className="h-full bg-card hover:border-accent transition-colors duration-300 transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col">
-                             {/* Added Image to Related Tools Card */}
-                            <div className="relative w-full aspect-[16/9] overflow-hidden rounded-t-lg">
-                                <Image
-                                    src={relatedTool.image || 'https://picsum.photos/300/169'}
-                                    alt={`${relatedTool.name} thumbnail`}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="transition-transform duration-300 group-hover:scale-105"
-                                    unoptimized
-                                />
-                            </div>
-                            <CardHeader className="flex-shrink-0 pb-2 pt-4 px-4">
-                                <div className="flex items-center gap-2 mb-1">
-                                    {relatedTool.categoryIcon && <relatedTool.categoryIcon className="h-4 w-4 text-accent flex-shrink-0" />}
-                                    <CardTitle className="text-base font-semibold line-clamp-1">{relatedTool.name}</CardTitle>
+                {relatedTools.map((relatedTool) => {
+                    const RelatedCategoryIcon = categoryDetailsMap.get(relatedTool.categorySlug)?.icon || Star;
+                    return (
+                         <Link key={relatedTool.id} href={`/tools/${relatedTool.id}`} className="block group">
+                            <Card className="h-full bg-card hover:border-accent transition-colors duration-300 transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col">
+                                {/* Added Image to Related Tools Card */}
+                                <div className="relative w-full aspect-[16/9] overflow-hidden rounded-t-lg">
+                                    <Image
+                                        src={relatedTool.image || 'https://picsum.photos/300/169'}
+                                        alt={`${relatedTool.name} thumbnail`}
+                                        layout="fill"
+                                        objectFit="cover"
+                                        className="transition-transform duration-300 group-hover:scale-105"
+                                        unoptimized
+                                    />
                                 </div>
-                                <p className="text-xs text-muted-foreground line-clamp-2 h-8">{relatedTool.summary}</p> {/* Fixed height */}
-                            </CardHeader>
-                             <CardContent className="mt-auto pt-2 pb-4 px-4">
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                     <Badge variant={relatedTool.isFree ? 'default' : 'destructive'} className={`text-xs py-0.5 px-2 ${relatedTool.isFree ? 'bg-green-600/20 text-green-400 border-green-600/30' : 'bg-red-600/20 text-red-400 border-red-600/30'}`}>
-                                        {relatedTool.isFree ? 'Free' : 'Paid'}
-                                    </Badge>
-                                    <div className="flex items-center">
-                                        <Star className="h-3 w-3 mr-1 text-yellow-500 fill-yellow-500"/>
-                                        {relatedTool.rating.toFixed(1)}
+                                <CardHeader className="flex-shrink-0 pb-2 pt-4 px-4">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <RelatedCategoryIcon className="h-4 w-4 text-accent flex-shrink-0" />
+                                        <CardTitle className="text-base font-semibold line-clamp-1">{relatedTool.name}</CardTitle>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </Link>
-                ))}
+                                    <p className="text-xs text-muted-foreground line-clamp-2 h-8">{relatedTool.summary}</p> {/* Fixed height */}
+                                </CardHeader>
+                                <CardContent className="mt-auto pt-2 pb-4 px-4">
+                                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                        <Badge variant={relatedTool.isFree ? 'default' : 'destructive'} className={`text-xs py-0.5 px-2 ${relatedTool.isFree ? 'bg-green-600/20 text-green-400 border-green-600/30' : 'bg-red-600/20 text-red-400 border-red-600/30'}`}>
+                                            {relatedTool.isFree ? 'Free' : 'Paid'}
+                                        </Badge>
+                                        <div className="flex items-center">
+                                            <Star className="h-3 w-3 mr-1 text-yellow-500 fill-yellow-500"/>
+                                            {relatedTool.rating.toFixed(1)}
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </Link>
+                    );
+                })}
                 </div>
             </section>
        )}
@@ -339,3 +348,4 @@ const ToolDetailClient: NextPage<ToolDetailClientProps> = ({ toolId }) => {
 };
 
 export default ToolDetailClient;
+
