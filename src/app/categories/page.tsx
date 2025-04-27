@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, Share2, Clock, Brush } from 'lucide-react';
 import Link from 'next/link';
-import type { Metadata } from 'next';
-import { motion } from 'framer-motion';
+import { motion } from 'framer-motion'; // Import framer-motion for animations
 
 
 // Define category data (consider moving to a shared location like src/lib/data/categories.ts)
@@ -106,10 +105,5 @@ const CategoriesPage: NextPage = () => {
   );
 };
 
-// Export metadata if needed (optional, but good for SEO)
-export const metadata: Metadata = {
-  title: 'Browse Categories - Toolshub4u',
-  description: 'Explore all categories of free online tools available on Toolshub4u.',
-};
 
 export default CategoriesPage;
