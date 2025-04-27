@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { NextPage } from 'next';
@@ -12,8 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Home, ChevronRight, Star, Send, ArrowRight } from 'lucide-react'; // Import necessary icons
+import { ArrowLeft, Home, ChevronRight, Star, Send, ArrowRight, ClipboardCheck } from 'lucide-react'; // Import necessary icons
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
+import { toast } from "@/hooks/use-toast";
 
 // Helper function to format date (replace with a proper date formatting library if needed)
 const formatDate = (isoString: string) => {
@@ -55,10 +55,16 @@ const ToolDetailPage: NextPage = () => {
     setNewComment(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCommentSubmit = (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.name.trim() || !newComment.comment.trim()) return; // Basic validation
-
+    if (!newComment.name.trim() || !newComment.comment.trim()) {
+        toast({
+            title: "Error",
+            description: "Please enter your name and comment.",
+            variant: "destructive",
+        });
+        return;
+    }
     setIsSubmitting(true);
     // Simulate API call delay
     setTimeout(() => {
@@ -71,6 +77,10 @@ const ToolDetailPage: NextPage = () => {
       setComments(prev => [...(prev || []), commentToAdd]);
       setNewComment({ name: '', comment: '' }); // Reset form
       setIsSubmitting(false);
+      toast({
+          title: "Success",
+          description: "Your comment has been posted!",
+      });
     }, 500); // Simulate network delay
   };
 
@@ -310,26 +320,25 @@ const ToolDetailPage: NextPage = () => {
 };
 
 // Example function to generate Metadata (Needs to be outside the client component)
-// In a real app, you'd fetch this data server-side based on params.toolId
-// export async function generateMetadata({ params }: { params: { toolId: string } }) {
-//   const tool = getToolById(params.toolId);
+export async function generateMetadata({ params }: { params: { toolId: string } }) {
+  const tool = getToolById(params.toolId);
 
-//   if (!tool) {
-//     return {
-//       title: 'Tool Not Found - Toolshub4u',
-//       description: 'The requested tool could not be found.',
-//     };
-//   }
+  if (!tool) {
+    return {
+      title: 'Tool Not Found - Toolshub4u',
+      description: 'The requested tool could not be found.',
+    };
+  }
 
-//   return {
-//     title: `${tool.name} - Toolshub4u`,
-//     description: tool.summary,
-//     // Add more metadata like openGraph images based on tool.image
-//     // openGraph: {
-//     //   images: [tool.image],
-//     // },
-//   };
-// }
+  return {
+    title: `${tool.name} - Toolshub4u`,
+    description: tool.summary,
+    // Add more metadata like openGraph images based on tool.image
+    // openGraph: {
+    //   images: [tool.image],
+    // },
+  };
+}
 
 
 export default ToolDetailPage;

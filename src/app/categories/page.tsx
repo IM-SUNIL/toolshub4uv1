@@ -1,10 +1,9 @@
-
 'use client';
 
 import type { NextPage } from 'next';
 import * as React from 'react';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, Share2, Clock, Brush } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion'; // Import framer-motion for animations
@@ -12,18 +11,18 @@ import { motion } from 'framer-motion'; // Import framer-motion for animations
 
 // Define category data (consider moving to a shared location like src/lib/data/categories.ts)
 const allCategories = [
-   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers', link: '#' },
-   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking', link: '#' },
-   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking', link: '#' },
-   { name: 'Design Aids', icon: Brush, description: 'Color pickers, font finders, mockups', link: '#' },
-   { name: 'Marketing Helpers', icon: Zap, description: 'Email signature generators, QR codes', link: '#' },
-   { name: 'Developer Tools', icon: Code, description: 'JSON formatters, Base64 encoders', link: '#' },
-   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs', link: '#' },
-   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants', link: '#' },
-   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets', link: '#' },
-   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online', link: '#' },
-   { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing', link: '#' }, // Use Scissors icon
-   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers', link: '#' },
+   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers', link: '/tools/social-media-tools' },
+   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking', link: '/tools/seo-utilities' },
+   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking', link: '/tools/productivity-boosters' },
+   { name: 'Design Aids', icon: Brush, description: 'Color pickers, font finders, mockups', link: '/tools/design-aids' },
+   { name: 'Marketing Helpers', icon: Zap, description: 'Email signature generators, QR codes', link: '/tools/marketing-helpers' },
+   { name: 'Developer Tools', icon: Code, description: 'JSON formatters, Base64 encoders', link: '/tools/developer-tools' },
+   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs', link: '/tools/pdf-tools' },
+   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants', link: '/tools/ai-tools' },
+   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets', link: '/tools/coding-utilities' },
+   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online', link: '/tools/video-editors' },
+   { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing', link: '/tools/image-tools' },
+   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers', link: '/tools/writing-aids' },
    // Add more categories as needed
 ];
 

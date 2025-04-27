@@ -11,12 +11,12 @@ import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, 
 import Link from 'next/link'; // Import Link for navigation
 
 const featuredTools = [
-  { name: 'AI Content Generator', icon: Zap, description: 'Generate marketing copy in seconds.', tags: ['AI', 'Writing'], link: '#' },
-  { name: 'PDF to Word Converter', icon: FileText, description: 'Convert PDF files to editable Word docs.', tags: ['PDF', 'Converter'], link: '#' },
-  { name: 'Image Background Remover', icon: Scissors, description: 'Remove image backgrounds automatically.', tags: ['Image', 'AI'], link: '#' },
-  { name: 'Online Video Editor', icon: Video, description: 'Simple video editing in your browser.', tags: ['Video', 'Editor'], link: '#' },
-  { name: 'Code Formatter', icon: Code, description: 'Format your code snippets instantly.', tags: ['Coding', 'Utility'], link: '#' },
-  { name: 'Resume Builder', icon: FileText, description: 'Create professional resumes easily.', tags: ['Career', 'Builder'], link: '#' },
+  { name: 'AI Content Generator', icon: Zap, description: 'Generate marketing copy in seconds.', tags: ['AI', 'Writing'], link: '/tools/ai-content-generator' },
+  { name: 'PDF to Word Converter', icon: FileText, description: 'Convert PDF files to editable Word docs.', tags: ['PDF', 'Converter'], link: '/tools/pdf-converter' },
+  { name: 'Image Background Remover', icon: Scissors, description: 'Remove image backgrounds automatically.', tags: ['Image', 'AI'], link: '/tools/image-bg-remover' },
+  { name: 'Online Video Editor', icon: Video, description: 'Simple video editing in your browser.', tags: ['Video', 'Editor'], link: '/tools/online-video-editor' },
+  { name: 'Code Formatter', icon: Code, description: 'Format your code snippets instantly.', tags: ['Coding', 'Utility'], link: '/tools/code-formatter' },
+  { name: 'Resume Builder', icon: FileText, description: 'Create professional resumes easily.', tags: ['Career', 'Builder'], link: '/tools/resume-builder' },
 ];
 
 const categories = [
@@ -115,7 +115,8 @@ const Home: NextPage = () => {
         <h2 className="text-3xl font-bold text-center mb-12">Featured Tools</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {featuredTools.map((tool, index) => (
-            <Card key={index} className="bg-card hover:border-accent transition-colors duration-300 group transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col h-full">
+            <Link key={index} href={tool.link} className="block group">
+            <Card className="bg-card hover:border-accent transition-colors duration-300 group transform hover:-translate-y-1 hover:shadow-xl cursor-pointer flex flex-col h-full">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
                    <tool.icon className="h-6 w-6 text-accent" />
@@ -137,6 +138,7 @@ const Home: NextPage = () => {
                  </Button>
               </CardContent>
             </Card>
+             </Link>
           ))}
         </div>
       </section>
