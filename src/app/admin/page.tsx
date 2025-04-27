@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast'; // Using toast for error messages
+import { Eye, EyeOff } from 'lucide-react'; // Import icons
 
 // WARNING: Storing credentials and performing authentication purely on the client-side
 // is inherently insecure and not recommended for production environments handling sensitive data.
@@ -20,6 +21,7 @@ export default function AdminLoginPage() {
   const { toast } = useToast();
   const [username, setUsername] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [showPassword, setShowPassword] = React.useState(false); // State for password visibility
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = React.useState(true); // State to manage initial auth check
 
@@ -51,6 +53,10 @@ export default function AdminLoginPage() {
       }
       // Do not reset isLoading here if redirecting on success
     }, 500);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   // Render nothing or a loading indicator while checking auth status
@@ -85,18 +91,28 @@ export default function AdminLoginPage() {
                 autoComplete="username"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 relative"> {/* Added relative positioning */}
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'} // Toggle input type
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="bg-input/50 focus:ring-accent"
+                className="bg-input/50 focus:ring-accent pr-10" // Added padding-right for icon
                 autoComplete="current-password"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-2/3 transform -translate-y-1/2 h-7 w-7 text-muted-foreground hover:text-foreground" // Position icon
+                onClick={togglePasswordVisibility}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Logging in...' : 'Login'}
@@ -110,4 +126,3 @@ export default function AdminLoginPage() {
     </div>
   );
 }
-
