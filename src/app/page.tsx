@@ -7,9 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Share2, Clock, Brush } from 'lucide-react'; // Added Share2, Clock, Brush
-import Link from 'next/link'; // Import Link for the button
-import { useRouter } from 'next/navigation'; // Import useRouter for navigation
+import { Search, ArrowRight, Zap, FileText, Scissors, Video, Code, CheckCircle, Gift, Lock, Share2, Clock, Brush } from 'lucide-react';
+import Link from 'next/link'; // Import Link for navigation
 
 const featuredTools = [
   { name: 'AI Content Generator', icon: Zap, description: 'Generate marketing copy in seconds.', tags: ['AI', 'Writing'], link: '#' },
@@ -21,18 +20,18 @@ const featuredTools = [
 ];
 
 const categories = [
-   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers' },
-   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking' },
-   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking' },
-   { name: 'Design Aids', icon: Brush, description: 'Color pickers, font finders, mockups' }, // Added Design Aids
-   { name: 'Marketing Helpers', icon: Zap, description: 'Email signature generators, QR codes' }, // Added Marketing Helpers
-   { name: 'Developer Tools', icon: Code, description: 'JSON formatters, Base64 encoders' }, // Added Developer Tools
-   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs' },
-   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants' },
-   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets' },
-   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online' },
-   { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing, filters' }, // Changed icon to Scissors
-   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers' },
+   { name: 'Social Media Tools', icon: Share2, description: 'Schedulers, analytics, content helpers', link: '/categories/social' }, // Added example link
+   { name: 'SEO Utilities', icon: Search, description: 'Keyword research, rank tracking', link: '/categories/seo' },
+   { name: 'Productivity Boosters', icon: Clock, description: 'Timers, task managers, note-taking', link: '/categories/productivity' },
+   { name: 'Design Aids', icon: Brush, description: 'Color pickers, font finders, mockups', link: '/categories/design' },
+   { name: 'Marketing Helpers', icon: Zap, description: 'Email signature generators, QR codes', link: '/categories/marketing' },
+   { name: 'Developer Tools', icon: Code, description: 'JSON formatters, Base64 encoders', link: '/categories/developer' },
+   { name: 'PDF Tools', icon: FileText, description: 'Convert, merge, split PDFs', link: '/categories/pdf' },
+   { name: 'AI Tools', icon: Zap, description: 'Generators, enhancers, assistants', link: '/categories/ai' },
+   { name: 'Coding Utilities', icon: Code, description: 'Formatters, linters, snippets', link: '/categories/coding' },
+   { name: 'Video Editors', icon: Video, description: 'Cut, trim, merge videos online', link: '/categories/video' },
+   { name: 'Image Tools', icon: Scissors, description: 'Background removal, resizing, filters', link: '/categories/image' },
+   { name: 'Writing Aids', icon: FileText, description: 'Grammar checkers, summarizers', link: '/categories/writing' },
 ];
 
 
@@ -43,22 +42,14 @@ const whyUsFeatures = [
 ];
 
 const Home: NextPage = () => {
-  const router = useRouter(); // Initialize router
-
-  // Placeholder function for button click - now runs on the client
-  const handleExploreMore = () => {
-    console.log("Explore More Categories clicked!");
-    router.push('/categories'); // Navigate to /categories page
-  };
 
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[50vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Reduced height */}
+      <section className="w-full h-[50vh] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden"> {/* Adjusted height */}
+         {/* Removed animated-gradient, using text gradient only */}
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
-          {/* Apply animated text gradient class here */}
-          {/* Added responsive text sizes: text-4xl default, md:text-5xl, lg:text-6xl */}
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-6 tracking-tight leading-tight animated-text-gradient">
             Your Ultimate Hub for Free Online Tools.
           </h1>
@@ -73,7 +64,7 @@ const Home: NextPage = () => {
 
       {/* Search Bar Section */}
       {/* Adjusted mt-4 to create space between hero button and search bar */}
-      <section className="w-full max-w-3xl px-4 mt-4 z-20 mb-12">
+      <section className="w-full max-w-3xl px-4 mt-4 z-20 mb-12"> {/* Added margin-bottom */}
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
@@ -86,15 +77,17 @@ const Home: NextPage = () => {
       </section>
 
        {/* Popular Categories Grid Section */}
-       <section className="w-full max-w-6xl px-4 pt-0 pb-8 mb-8 relative"> {/* Removed mt-8 and pt-12, set pt-0 */}
+       <section className="w-full max-w-6xl px-4 pt-0 pb-8 mb-8 relative"> {/* Adjusted padding and margin */}
         <h2 className="text-3xl font-bold text-center mb-12">Popular Categories</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {categories.slice(0, 9).map((category, index) => ( // Display first 9 categories
-            <Card key={index} className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer flex flex-col h-full">
-              <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
-              <p className="text-sm text-muted-foreground flex-grow">{category.description}</p>
-            </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6"> {/* Kept 3 columns for popular */}
+          {categories.slice(0, 6).map((category, index) => ( // Display first 6 popular categories
+             <Link href={category.link || '#'} key={index} className="h-full">
+                <Card className="text-center p-6 bg-card hover:bg-card/80 dark:hover:bg-muted/80 transition-all duration-300 transform hover:scale-105 hover:shadow-lg cursor-pointer flex flex-col h-full">
+                  <category.icon className="h-10 w-10 text-accent mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">{category.name}</h3>
+                  <p className="text-sm text-muted-foreground flex-grow">{category.description}</p>
+                </Card>
+            </Link>
           ))}
         </div>
         {/* Blurred Gradient Overlay */}
@@ -102,15 +95,17 @@ const Home: NextPage = () => {
       </section>
 
       {/* Explore More Categories Button Section */}
-      <section className="w-full max-w-6xl px-4 mb-16 flex justify-center -mt-8 z-20"> {/* Positioned below overlay */}
+       <section className="w-full max-w-6xl px-4 mb-16 flex justify-center -mt-8 z-20"> {/* Positioned below overlay */}
           <Button
               variant="outline"
               size="lg"
-              onClick={handleExploreMore}
+              asChild // Use asChild to allow Link to wrap the button content
               className="group transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/30 hover:border-accent bg-background/80 backdrop-blur-md border-border px-6 py-3 sm:px-8 sm:py-4" // Added padding for better tappability
           >
-              Explore More Categories
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              <Link href="/categories"> {/* Link navigates to /categories */}
+                  Explore More Categories
+                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-300" />
+              </Link>
           </Button>
       </section>
 
@@ -164,3 +159,4 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+

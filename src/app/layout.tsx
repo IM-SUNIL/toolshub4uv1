@@ -36,7 +36,9 @@ export default function RootLayout({
         >
           <div className="flex min-h-screen flex-col">
             <Navbar />
-            <main className="flex-grow">{children}</main>
+            <main className="flex-grow pt-14"> {/* Add padding-top to avoid overlap with fixed navbar */}
+              {children}
+            </main>
             <Footer />
           </div>
           <Toaster />
