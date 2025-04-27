@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+   // Redirects are now handled by firebase.json rewrites
+   // async redirects() {
+   //   return [
+   //     {
+   //       source: '/categories',
+   //       destination: '/categories.html', // Or your main categories overview page
+   //       permanent: true,
+   //     },
+   //   ]
+   // },
 };
 
 export default nextConfig;
