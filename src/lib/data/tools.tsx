@@ -3,6 +3,7 @@
 
 import type { LucideIcon } from 'lucide-react';
 import { Zap, FileText, Scissors, Video, Code, CheckCircle, Star, StarHalf } from 'lucide-react';
+import * as React from 'react'; // Import React for JSX
 
 export interface Tool {
   id: string;
