@@ -73,8 +73,21 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
     setIsSubmitting(true);
     console.log('Form Data Submitted:', data); // Log data for now
 
-    // Simulate API call/saving data
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate API call/saving data (replace with actual DB save later)
+    // Example using localStorage:
+    // try {
+    //   const tools = JSON.parse(localStorage.getItem('tools')) || [];
+    //   const newTool = { ...data, id: `tool-${Date.now()}`, createdAt: new Date().toISOString() }; // Assign basic ID
+    //   tools.push(newTool);
+    //   localStorage.setItem('tools', JSON.stringify(tools));
+    // } catch (error) {
+    //   console.error("Failed to save tool to localStorage", error);
+    //   toast({ title: 'Error', description: 'Failed to save tool.', variant: 'destructive' });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
+
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
     setIsSubmitting(false);
     toast({
@@ -82,6 +95,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
       description: `Tool "${data.toolName}" added successfully.`,
     });
     onSuccess(); // Call the success callback (e.g., close dialog)
+    form.reset(); // Reset form after successful submission
   }
 
   return (

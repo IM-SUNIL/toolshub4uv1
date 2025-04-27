@@ -29,7 +29,7 @@ const categoryFormSchema = z.object({
   categoryName: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }).max(200, { message: 'Description cannot exceed 200 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
-  // parentCategory: z.string().optional(), // Optional parent category
+  // parentCategory: z.string().optional(), // Optional parent category - keep commented for now
   tags: z.string().optional().or(z.literal('')), // Optional tags
 });
 
@@ -59,8 +59,21 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
     setIsSubmitting(true);
     console.log('Category Form Data Submitted:', data); // Log data for now
 
-    // Simulate API call/saving data
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Simulate API call/saving data (replace with actual DB save later)
+    // Example using localStorage:
+    // try {
+    //   const categories = JSON.parse(localStorage.getItem('categories')) || [];
+    //   const newCategory = { ...data, id: `cat-${Date.now()}`, createdAt: new Date().toISOString() }; // Assign basic ID
+    //   categories.push(newCategory);
+    //   localStorage.setItem('categories', JSON.stringify(categories));
+    // } catch (error) {
+    //   console.error("Failed to save category to localStorage", error);
+    //   toast({ title: 'Error', description: 'Failed to save category.', variant: 'destructive' });
+    //   setIsSubmitting(false);
+    //   return;
+    // }
+
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
 
     setIsSubmitting(false);
     toast({
@@ -68,6 +81,7 @@ export default function AddCategoryForm({ /* parentCategories, */ onSuccess, onC
       description: `Category "${data.categoryName}" added successfully.`,
     });
     onSuccess(); // Call the success callback (e.g., close dialog)
+    form.reset(); // Reset form after successful submission
   }
 
   return (

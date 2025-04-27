@@ -79,8 +79,8 @@ export default function AdminDashboardPage() {
               </DialogHeader>
               <AddToolForm
                 categories={categories}
-                onSuccess={() => setIsAddToolDialogOpen(false)}
-                onClose={() => setIsAddToolDialogOpen(false)}
+                onSuccess={() => setIsAddToolDialogOpen(false)} // Close dialog on success
+                onClose={() => setIsAddToolDialogOpen(false)} // Close dialog on cancel
                />
             </DialogContent>
           </Dialog>
@@ -100,8 +100,8 @@ export default function AdminDashboardPage() {
                  </DialogDescription>
                </DialogHeader>
                <AddCategoryForm
-                 onSuccess={() => setIsAddCategoryDialogOpen(false)}
-                 onClose={() => setIsAddCategoryDialogOpen(false)}
+                 onSuccess={() => setIsAddCategoryDialogOpen(false)} // Close dialog on success
+                 onClose={() => setIsAddCategoryDialogOpen(false)} // Close dialog on cancel
                />
             </DialogContent>
           </Dialog>
