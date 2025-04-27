@@ -77,7 +77,7 @@ export default function AdminLoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="e.g., sunil.x.rajput"
+                placeholder="sunil.x.rajput" // Removed "e.g., "
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -110,3 +110,4 @@ export default function AdminLoginPage() {
     </div>
   );
 }
+
