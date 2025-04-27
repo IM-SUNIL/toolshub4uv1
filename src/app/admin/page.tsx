@@ -83,6 +83,7 @@ export default function AdminLoginPage() {
               <Input
                 id="username"
                 type="text"
+                placeholder="Enter username" // Updated placeholder
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -95,7 +96,7 @@ export default function AdminLoginPage() {
               <Input
                 id="password"
                 type={showPassword ? 'text' : 'password'} // Toggle input type
-                placeholder="••••••••"
+                placeholder="Enter password" // Updated placeholder
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
