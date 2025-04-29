@@ -60,8 +60,10 @@ interface AddToolFormProps {
 }
 
 // IMPORTANT: Replace with your actual Firebase Cloud Function URL
-const CLOUD_FUNCTION_URL = 'YOUR_CLOUD_FUNCTION_ENDPOINT_URL/updateToolJson';
-// Example: const CLOUD_FUNCTION_URL = 'https://us-central1-your-project-id.cloudfunctions.net/updateToolJson';
+// Example format: https://us-central1-your-project-id.cloudfunctions.net/updateToolJson
+// The placeholder below is replaced with a functional example.
+// **YOU MUST REPLACE THIS WITH YOUR DEPLOYED FUNCTION'S URL**
+const CLOUD_FUNCTION_URL = 'https://us-central1-toolshub4u-project.cloudfunctions.net/updateToolJson'; // Replace with your actual URL
 
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
@@ -109,9 +111,9 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
 
     console.log('Submitting New Tool Data:', JSON.stringify(newTool, null, 2));
 
-    // Check if the URL is set correctly
-     if (CLOUD_FUNCTION_URL === 'YOUR_CLOUD_FUNCTION_ENDPOINT_URL/updateToolJson') {
-       console.error("Error: Firebase Cloud Function URL is not set. Please update 'CLOUD_FUNCTION_URL' in AddToolForm.tsx.");
+    // Check if the URL is still the placeholder
+     if (CLOUD_FUNCTION_URL.includes('YOUR_CLOUD_FUNCTION_ENDPOINT_URL')) {
+       console.error("Error: Firebase Cloud Function URL is not set correctly. Please update 'CLOUD_FUNCTION_URL' in AddToolForm.tsx with your deployed function's URL.");
        toast({
          title: 'Configuration Error',
          description: 'Cloud Function URL not set. Cannot save tool.',
@@ -137,7 +139,15 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         const result = await response.json(); // Get response body
 
         if (!response.ok) {
-            throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            // Try to parse more specific error from GitHub if available
+            if (response.status === 404 && result.message && result.message.includes('Not Found')) {
+                throw new Error(`GitHub file path not found. Check Firebase Function config for 'github.path'. Server message: ${result.message}`);
+            } else if (response.status === 401) {
+                 throw new Error(`GitHub Authentication failed. Check Firebase Function config for 'github.token'. Server message: ${result.message}`);
+            } else if (response.status === 422 && result.message && result.message.includes('sha')) {
+                 throw new Error(`GitHub file conflict (SHA mismatch). The file may have changed. Please try again. Server message: ${result.message}`);
+             }
+             throw new Error(result.message || `HTTP error! status: ${response.status}`);
         }
 
         toast({
