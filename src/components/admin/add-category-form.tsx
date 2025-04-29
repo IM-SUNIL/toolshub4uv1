@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 // No Label needed directly if using FormLabel
 // Import Select components if needed for Parent Category
-// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -84,35 +84,24 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
         createdAt: new Date().toISOString(), // Add timestamp
     };
 
-    console.log('New Category Data:', newCategory); // Log the processed data
+    console.log('New Category Data (Simulated Save):', JSON.stringify(newCategory, null, 2)); // Log the processed data clearly
 
-    // **Placeholder for saving data:**
-    // In a real app, send `newCategory` to your backend API
-    // to update `categories.json` or save to a database.
-    // Example (conceptual):
-    // try {
-    //   const response = await fetch('/api/add-category', { // Your backend endpoint
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(newCategory),
-    //   });
-    //   if (!response.ok) throw new Error('Failed to save category');
-    //   toast({ title: 'Success!', description: `Category "${data.categoryName}" added.` });
-    //   onSuccess();
-    //   form.reset();
-    // } catch (error) {
-    //   console.error("Failed to save category", error);
-    //   toast({ title: 'Error', description: 'Failed to save category.', variant: 'destructive' });
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    // **IMPORTANT: Saving directly to categories.json in GitHub from the client-side is not possible due to security restrictions.**
+    // This function currently simulates saving the data.
+    // To make this work in production, you need to:
+    // 1. Create a backend API endpoint (e.g., using Firebase Cloud Functions, Next.js API Routes, or another backend).
+    // 2. Securely authenticate with GitHub on the backend using an API token.
+    // 3. Have the backend fetch categories.json, add the new category, and commit the changes back to the GitHub repository.
+    // 4. Send the `newCategory` object from this form to your backend endpoint.
 
-    // Simulate delay for now
+
+    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsSubmitting(false);
     toast({
       title: 'Success (Simulated)!',
-      description: `Category "${data.categoryName}" added (Check console for data).`,
+      description: `Category "${data.categoryName}" processed. Data logged to console. Update categories.json manually or implement a backend endpoint.`,
+      duration: 7000, // Give more time to read the message
     });
     onSuccess();
     form.reset();
@@ -231,3 +220,4 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
      </ScrollArea>
   );
 }
+

@@ -100,38 +100,27 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
     };
 
 
-    console.log('New Tool Data:', newTool); // Log the processed data
+    console.log('New Tool Data (Simulated Save):', JSON.stringify(newTool, null, 2)); // Log the processed data clearly
 
-    // **Placeholder for saving data:**
-    // In a real app, you would send `newTool` to your backend API
-    // which would then update the `tools.json` file or save to a database.
-    // Example (conceptual - requires backend logic):
-    // try {
-    //   const response = await fetch('/api/add-tool', { // Your backend endpoint
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(newTool),
-    //   });
-    //   if (!response.ok) throw new Error('Failed to save tool');
-    //   toast({ title: 'Success!', description: `Tool "${data.toolName}" added.` });
-    //   onSuccess();
-    //   form.reset();
-    // } catch (error) {
-    //   console.error("Failed to save tool", error);
-    //   toast({ title: 'Error', description: 'Failed to save tool.', variant: 'destructive' });
-    // } finally {
-    //   setIsSubmitting(false);
-    // }
+    // **IMPORTANT: Saving directly to tools.json in GitHub from the client-side is not possible due to security restrictions.**
+    // This function currently simulates saving the data.
+    // To make this work in production, you need to:
+    // 1. Create a backend API endpoint (e.g., using Firebase Cloud Functions, Next.js API Routes, or another backend).
+    // 2. Securely authenticate with GitHub on the backend using an API token.
+    // 3. Have the backend fetch tools.json, add the new tool, and commit the changes back to the GitHub repository.
+    // 4. Send the `newTool` object from this form to your backend endpoint.
 
-    // Simulate delay for now
+    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     setIsSubmitting(false);
+
     toast({
       title: 'Success (Simulated)!',
-      description: `Tool "${data.toolName}" added (Check console for data).`,
+      description: `Tool "${data.toolName}" processed. Data logged to console. Update tools.json manually or implement a backend endpoint.`,
+       duration: 7000, // Give more time to read the message
     });
-    onSuccess();
-    form.reset();
+    onSuccess(); // Close the dialog
+    form.reset(); // Reset the form fields
   }
 
   return (
@@ -328,3 +317,4 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
      </ScrollArea>
   );
 }
+
