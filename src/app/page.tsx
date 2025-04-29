@@ -25,7 +25,7 @@ const Home: NextPage = () => {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full h-[calc(70vh-14px)] md:h-[calc(50vh-14px)] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden pt-[2px]">
+      <section className="w-full h-[calc(70vh-14px)] md:h-[calc(50vh-5px)] flex flex-col justify-center items-center text-center px-4 relative overflow-hidden pt-[2px]">
          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background opacity-50 dark:opacity-80 z-0"></div>
         <div className="z-10 relative">
            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-6 tracking-tight leading-tight animated-text-gradient px-4 sm:px-6 md:px-8">
