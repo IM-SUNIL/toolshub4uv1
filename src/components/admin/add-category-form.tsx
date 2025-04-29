@@ -8,7 +8,6 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-// No Label needed directly if using FormLabel
 // Import Select components if needed for Parent Category
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -29,6 +28,7 @@ const generateSlug = (name: string) => {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 };
 
@@ -39,6 +39,7 @@ const iconMap: { [key: string]: React.ElementType } = {
     Scissors,
     Video,
     Code,
+    // Add more icons here as needed, matching the key in Zod schema
 };
 
 // Define Zod schema for validation
@@ -46,7 +47,11 @@ const categoryFormSchema = z.object({
   categoryName: z.string().min(2, { message: 'Category name must be at least 2 characters.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }).max(200, { message: 'Description cannot exceed 200 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
-  iconName: z.string({ required_error: 'Please select an icon.' }), // Icon name selection
+  // Ensure iconName is required and uses the keys from iconMap
+  iconName: z.enum(Object.keys(iconMap) as [keyof typeof iconMap, ...(keyof typeof iconMap)[]], {
+     required_error: 'Please select an icon.',
+     invalid_type_error: 'Invalid icon selected.'
+   }),
   tags: z.string().optional().or(z.literal('')), // Optional tags as comma-separated string
 });
 
@@ -57,6 +62,11 @@ interface AddCategoryFormProps {
   onClose: () => void; // Callback to close the dialog/form
 }
 
+// TODO: Replace with your actual Firebase Cloud Function URL for categories
+const CATEGORY_CLOUD_FUNCTION_URL = 'YOUR_CATEGORY_CLOUD_FUNCTION_ENDPOINT_URL/updateCategoryJson';
+// Example: const CATEGORY_CLOUD_FUNCTION_URL = 'https://us-central1-your-project-id.cloudfunctions.net/updateCategoryJson';
+
+
 export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormProps) {
   const { toast } = useToast();
   const form = useForm<CategoryFormValues>({
@@ -65,7 +75,7 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
       categoryName: '',
       description: '',
       imageUrl: '',
-      iconName: undefined,
+      iconName: undefined, // Use undefined or a default valid key from iconMap if needed
       tags: '',
     },
   });
@@ -74,6 +84,7 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
   async function onSubmit(data: CategoryFormValues) {
     setIsSubmitting(true);
 
+    // Prepare the data in the structure expected by categories.json
     const newCategory = {
         slug: generateSlug(data.categoryName), // Generate slug
         name: data.categoryName,
@@ -84,27 +95,71 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
         createdAt: new Date().toISOString(), // Add timestamp
     };
 
-    console.log('New Category Data (Simulated Save):', JSON.stringify(newCategory, null, 2)); // Log the processed data clearly
+    console.log('Submitting New Category Data:', JSON.stringify(newCategory, null, 2));
 
-    // **IMPORTANT: Saving directly to categories.json in GitHub from the client-side is not possible due to security restrictions.**
-    // This function currently simulates saving the data.
-    // To make this work in production, you need to:
-    // 1. Create a backend API endpoint (e.g., using Firebase Cloud Functions, Next.js API Routes, or another backend).
-    // 2. Securely authenticate with GitHub on the backend using an API token.
-    // 3. Have the backend fetch categories.json, add the new category, and commit the changes back to the GitHub repository.
-    // 4. Send the `newCategory` object from this form to your backend endpoint.
+    // Check if the URL is set correctly
+    if (CATEGORY_CLOUD_FUNCTION_URL === 'YOUR_CATEGORY_CLOUD_FUNCTION_ENDPOINT_URL/updateCategoryJson') {
+        console.error("Error: Firebase Cloud Function URL for categories is not set. Please update 'CATEGORY_CLOUD_FUNCTION_URL' in AddCategoryForm.tsx.");
+        toast({
+            title: 'Configuration Error',
+            description: 'Category Cloud Function URL not set. Cannot save category.',
+            variant: 'destructive',
+            duration: 7000,
+        });
+        setIsSubmitting(false);
+        // --- TEMPORARY LOGGING FOR DEMO ---
+        console.log("--- SIMULATED SAVE ---");
+        console.log("Category data that *would* be sent:", JSON.stringify(newCategory, null, 2));
+        console.log("If the endpoint existed, this data would be POSTed to:", CATEGORY_CLOUD_FUNCTION_URL);
+        console.log("--- END SIMULATED SAVE ---");
+        toast({
+            title: 'Simulated Success!',
+            description: `Category "${data.categoryName}" processed (logged to console). Implement the backend endpoint to save permanently.`,
+            duration: 7000,
+        });
+        onSuccess(); // Still call onSuccess for UI feedback
+        form.reset();
+        // --- END TEMPORARY LOGGING ---
+        return; // Stop execution since endpoint isn't ready
+    }
 
+    // TODO: Implement the actual API call when the cloud function endpoint exists
+    try {
+        // --- Placeholder for fetch call ---
+        // const response = await fetch(CATEGORY_CLOUD_FUNCTION_URL, {
+        //   method: 'POST',
+        //   headers: {
+        //     'Content-Type': 'application/json',
+        //   },
+        //   body: JSON.stringify(newCategory),
+        // });
+        // const result = await response.json();
+        // if (!response.ok) {
+        //   throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        // }
+        // --- End Placeholder ---
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    toast({
-      title: 'Success (Simulated)!',
-      description: `Category "${data.categoryName}" processed. Data logged to console. Update categories.json manually or implement a backend endpoint.`,
-      duration: 7000, // Give more time to read the message
-    });
-    onSuccess();
-    form.reset();
+        // Simulate API call delay for now
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        toast({
+        title: 'Success (Simulated)!', // Update title when endpoint is live
+        description: `Category "${data.categoryName}" processed. Implement backend endpoint to save to GitHub.`,
+        duration: 7000,
+        });
+        onSuccess();
+        form.reset();
+    } catch (error: any) {
+        console.error('Error submitting category:', error);
+        toast({
+        title: 'Error Saving Category',
+        description: error.message || 'Failed to save the category. Check console for details.',
+        variant: 'destructive',
+        duration: 7000,
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
@@ -156,12 +211,14 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
                   </FormControl>
                   <SelectContent>
                     {Object.keys(iconMap).map((iconKey) => {
-                       const IconComp = iconMap[iconKey];
+                       // Assert key type for safety
+                       const key = iconKey as keyof typeof iconMap;
+                       const IconComp = iconMap[key];
                        return (
-                           <SelectItem key={iconKey} value={iconKey}>
+                           <SelectItem key={key} value={key}>
                              <div className="flex items-center gap-2">
                                <IconComp className="h-4 w-4" />
-                               {iconKey}
+                               {key} {/* Display the name */}
                              </div>
                            </SelectItem>
                        );
@@ -220,4 +277,3 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
      </ScrollArea>
   );
 }
-

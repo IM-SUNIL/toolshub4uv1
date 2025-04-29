@@ -8,7 +8,6 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-// No Label needed directly if using FormLabel
 import {
   Select,
   SelectContent,
@@ -28,25 +27,26 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-// Helper function to generate a simple slug
+// Helper function to generate a simple slug (consider more robust slugification if needed)
 const generateSlug = (name: string) => {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
     .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
 };
 
 
-// Define Zod schema for validation
+// Define Zod schema for validation (ensure it matches the expected structure for JSON)
 const toolFormSchema = z.object({
   toolName: z.string().min(2, { message: 'Tool name must be at least 2 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
   rating: z.coerce.number().min(0).max(5, { message: 'Rating must be between 0 and 5.' }), // Allow 0 rating
-  categorySlug: z.string({ required_error: 'Please select a category.' }), // Changed name to categorySlug
+  categorySlug: z.string({ required_error: 'Please select a category.' }),
   priceType: z.enum(['Free', 'Paid'], { required_error: 'Please select a price type.' }),
   shortDescription: z.string().min(10, { message: 'Short description must be at least 10 characters.' }).max(160, { message: 'Short description must not exceed 160 characters.' }),
   fullDescription: z.string().min(20, { message: 'Full description must be at least 20 characters.' }),
-  usageSteps: z.string().optional().or(z.literal('')), // Optional steps as single string for now
+  usageSteps: z.string().optional().or(z.literal('')), // Optional steps as single string, will be processed
   websiteLink: z.string().url({ message: 'Please enter a valid website URL.' }),
   tags: z.string().optional().or(z.literal('')), // Optional tags as comma-separated string
 });
@@ -58,6 +58,11 @@ interface AddToolFormProps {
   onSuccess: () => void; // Callback on successful submission
   onClose: () => void; // Callback to close the dialog/form
 }
+
+// IMPORTANT: Replace with your actual Firebase Cloud Function URL
+const CLOUD_FUNCTION_URL = 'YOUR_CLOUD_FUNCTION_ENDPOINT_URL/updateToolJson';
+// Example: const CLOUD_FUNCTION_URL = 'https://us-central1-your-project-id.cloudfunctions.net/updateToolJson';
+
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
   const { toast } = useToast();
@@ -81,6 +86,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
   async function onSubmit(data: ToolFormValues) {
     setIsSubmitting(true);
 
+    // Prepare the data in the structure expected by tools.json
     const newTool = {
         id: generateSlug(data.toolName), // Generate slug as ID
         name: data.toolName,
@@ -89,38 +95,70 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         isFree: data.priceType === 'Free',
         rating: data.rating,
         summary: data.shortDescription,
-        description: data.fullDescription,
+        description: data.fullDescription, // Keep as HTML string if backend expects it
         // Convert usage steps string (one per line) into array of objects
+        // IMPORTANT: The backend function needs to know which icon to use if specified.
+        // Here, we omit iconName, assuming backend handles it or it's not used yet.
         usageSteps: data.usageSteps?.split('\n').filter(step => step.trim() !== '').map(step => ({ text: step.trim() })) || [],
         websiteLink: data.websiteLink,
         tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
-        // comments: [], // Initialize with empty comments if needed
-        // relatedToolIds: [], // Initialize related IDs if needed
+        comments: [], // Initialize with empty comments
+        relatedToolIds: [], // Initialize related IDs
         createdAt: new Date().toISOString(), // Add timestamp
     };
 
+    console.log('Submitting New Tool Data:', JSON.stringify(newTool, null, 2));
 
-    console.log('New Tool Data (Simulated Save):', JSON.stringify(newTool, null, 2)); // Log the processed data clearly
+    // Check if the URL is set correctly
+     if (CLOUD_FUNCTION_URL === 'YOUR_CLOUD_FUNCTION_ENDPOINT_URL/updateToolJson') {
+       console.error("Error: Firebase Cloud Function URL is not set. Please update 'CLOUD_FUNCTION_URL' in AddToolForm.tsx.");
+       toast({
+         title: 'Configuration Error',
+         description: 'Cloud Function URL not set. Cannot save tool.',
+         variant: 'destructive',
+         duration: 7000,
+       });
+       setIsSubmitting(false);
+       return;
+     }
 
-    // **IMPORTANT: Saving directly to tools.json in GitHub from the client-side is not possible due to security restrictions.**
-    // This function currently simulates saving the data.
-    // To make this work in production, you need to:
-    // 1. Create a backend API endpoint (e.g., using Firebase Cloud Functions, Next.js API Routes, or another backend).
-    // 2. Securely authenticate with GitHub on the backend using an API token.
-    // 3. Have the backend fetch tools.json, add the new tool, and commit the changes back to the GitHub repository.
-    // 4. Send the `newTool` object from this form to your backend endpoint.
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
+    try {
+        const response = await fetch(CLOUD_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+             // Add Authorization header if your function requires it
+             // 'Authorization': `Bearer YOUR_ID_TOKEN`
+            },
+            body: JSON.stringify(newTool), // Send the processed data
+        });
 
-    toast({
-      title: 'Success (Simulated)!',
-      description: `Tool "${data.toolName}" processed. Data logged to console. Update tools.json manually or implement a backend endpoint.`,
-       duration: 7000, // Give more time to read the message
-    });
-    onSuccess(); // Close the dialog
-    form.reset(); // Reset the form fields
+        const result = await response.json(); // Get response body
+
+        if (!response.ok) {
+            throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        }
+
+        toast({
+            title: 'Success!',
+            description: `Tool "${data.toolName}" added successfully to GitHub!`,
+            duration: 5000,
+        });
+        onSuccess(); // Close the dialog
+        form.reset(); // Reset the form fields
+
+    } catch (error: any) {
+        console.error('Error submitting tool:', error);
+        toast({
+            title: 'Error Saving Tool',
+            description: error.message || 'Failed to save the tool to GitHub. Check console for details.',
+            variant: 'destructive',
+            duration: 7000,
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
   }
 
   return (
@@ -317,4 +355,3 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
      </ScrollArea>
   );
 }
-
