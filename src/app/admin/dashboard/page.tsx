@@ -17,6 +17,7 @@ import {
 import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
 import { useToast } from '@/hooks/use-toast'; // Import useToast
+import { Skeleton } from '@/components/ui/skeleton'; // For loading state
 
 // Define Category type matching the API response
 interface Category {
@@ -50,7 +51,8 @@ export default function AdminDashboardPage() {
        if (!response.ok) {
          const errorText = await response.text(); // Get error body
          console.error(`Failed to fetch categories. Status: ${response.status}, StatusText: ${response.statusText}, Body: ${errorText}`);
-         throw new Error(`Failed to fetch categories: ${response.statusText} (Status: ${response.status})`);
+         // Improved error message for toast
+         throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}. URL: ${CATEGORIES_API_URL}. Ensure API/emulators are running and firebase.json rewrites are correct.`);
        }
        const data: Category[] = await response.json();
        const formattedCategories = data.map(cat => ({
@@ -63,7 +65,7 @@ export default function AdminDashboardPage() {
        console.error('Error fetching categories:', error);
        toast({
          title: 'Error Fetching Categories',
-         description: error.message || 'Could not load categories for the dropdown. Ensure Firebase emulators (functions) are running or the API is deployed.',
+         description: error.message || 'Could not load categories for the dropdown. Check API endpoint and Firebase setup.',
          variant: 'destructive',
          duration: 10000, // Longer duration for error
        });
@@ -75,14 +77,19 @@ export default function AdminDashboardPage() {
 
   React.useEffect(() => {
     // Check authentication status on component mount
-    if (sessionStorage.getItem('isAdmin') !== 'true') {
-      router.replace('/admin'); // Redirect to login if not authenticated
-    } else {
-      setIsAuthenticated(true); // User is authenticated
-      fetchCategories(); // Fetch categories if authenticated
-    }
+    // Use setTimeout to ensure session check happens after potential initial redirects
+    const timer = setTimeout(() => {
+        if (typeof window !== 'undefined' && sessionStorage.getItem('isAdmin') !== 'true') {
+            router.replace('/admin'); // Redirect to login if not authenticated
+        } else {
+            setIsAuthenticated(true); // User is authenticated
+            fetchCategories(); // Fetch categories if authenticated
+        }
+    }, 0); // Execute immediately after current call stack clears
+
+     return () => clearTimeout(timer); // Cleanup timer on unmount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]); // Only run once on mount based on router, fetchCategories is stable due to useCallback
+  }, [router]); // Rerun effect if router changes
 
   const handleLogout = () => {
     sessionStorage.removeItem('isAdmin'); // Clear the session flag
@@ -94,7 +101,8 @@ export default function AdminDashboardPage() {
     return (
        <div className="flex min-h-screen items-center justify-center bg-background">
          {/* Optional: Add a loading spinner here */}
-         <p className="text-muted-foreground">Verifying access...</p>
+         <Skeleton className="h-8 w-32" />
+         <p className="text-muted-foreground ml-2">Verifying access...</p>
        </div>
      );
   }
@@ -135,7 +143,11 @@ export default function AdminDashboardPage() {
                 </DialogDescription>
               </DialogHeader>
                {isLoadingCategories ? (
-                 <p className="text-muted-foreground p-4 text-center">Loading categories...</p>
+                  <div className="p-4 text-center space-y-2">
+                    <Skeleton className="h-5 w-24 mx-auto" />
+                    <Skeleton className="h-9 w-full" />
+                    <p className="text-muted-foreground text-sm">Loading categories...</p>
+                  </div>
                ) : categories.length === 0 ? (
                   <p className="text-destructive p-4 text-center">
                       No categories found. Please add a category first or refresh the list.
@@ -189,9 +201,9 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-4">Use the buttons above to add new tools or categories.</p>
-           <p className="text-muted-foreground">Data is now being saved to MongoDB via Firebase Cloud Functions.</p>
-           <p className="text-green-600 dark:text-green-400">Refresh categories if the dropdown in 'Add Tool' seems outdated.</p>
-           <p>Future enhancements could include:</p>
+           <p className="text-muted-foreground">Data is being fetched from and saved to MongoDB via Firebase Cloud Functions.</p>
+           <p className="text-green-600 dark:text-green-400">Click the refresh icon if the categories dropdown in 'Add Tool' seems outdated.</p>
+           <p className="mt-4">Future enhancements could include:</p>
            <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
              <li>Editing existing tools and categories via API</li>
              <li>Deleting tools and categories via API</li>
