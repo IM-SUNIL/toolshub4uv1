@@ -57,21 +57,38 @@ export const iconMap: { [key: string]: LucideIcon } = {
 };
 
 // --- API Endpoints ---
-// Use absolute URLs for server-side fetching
-// IMPORTANT: Replace with your actual deployed function URL or localhost emulator URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:5001/toolshub4u/us-central1/api'; // Default to emulator URL
-const TOOLS_API_ENDPOINT = `${API_BASE_URL}/tools`;
-const CATEGORIES_API_ENDPOINT = `${API_BASE_URL}/categories`;
+// Base URL for the Firebase Cloud Functions API.
+// It MUST be set in the environment variables (.env.local for local dev, Vercel/Firebase env vars for deployment).
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+if (!API_BASE_URL) {
+    console.warn(
+        '\x1b[33m%s\x1b[0m', // Yellow text
+        'Warning: NEXT_PUBLIC_API_BASE_URL environment variable is not set.'
+    );
+    console.warn(
+        'API calls may fail. For local development with Firebase emulators, set it in .env.local:',
+        '\nNEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:5001/toolshub4u/us-central1/api'
+    );
+    console.warn(
+        'For deployment, set this variable in your hosting provider\'s environment settings.'
+    );
+}
 
 // Helper function to create absolute URLs for fetch
+// Necessary for server-side fetch calls (SSR, SSG, Server Components)
 const getAbsoluteUrl = (path: string): string => {
-  // If path already starts with http, assume it's absolute
-  if (path.startsWith('http')) {
-    return path;
-  }
-  // Ensure no double slashes
-  return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+    // If path already starts with http, assume it's absolute
+    if (path.startsWith('http')) {
+        return path;
+    }
+    // If API_BASE_URL is not set, relative paths might work client-side but fail server-side.
+    if (!API_BASE_URL) {
+        console.error("API_BASE_URL is not defined. Relative path used:", path);
+        return path; // Fallback to relative path, may cause issues server-side
+    }
+    // Ensure no double slashes
+    return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 };
 
 // --- Data Fetching Functions (using fetch API) ---
@@ -80,15 +97,19 @@ const getAbsoluteUrl = (path: string): string => {
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl('/tools');
+        console.log(`Fetching all tools from: ${url}`); // Log the URL being fetched
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
+            const errorText = await response.text(); // Get more details on the error
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         const data: Tool[] = await response.json();
         return data;
     } catch (error) {
         console.error("Error fetching all tools:", error);
-        return []; // Return empty array on error
+        // Re-throw the error or return empty array depending on desired behavior
+        // throw error; // Option 1: Re-throw to let caller handle it
+        return []; // Option 2: Return empty array on error
     }
 };
 
@@ -96,10 +117,12 @@ export const getAllTools = async (): Promise<Tool[]> => {
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
         const url = getAbsoluteUrl(`/tools/${slug}`);
+        console.log(`Fetching tool by slug from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
-            if (response.status === 404) return null; // Not found
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
+            if (response.status === 404) return null; // Not found is a valid case
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         const data: Tool = await response.json();
         return data;
@@ -113,9 +136,11 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
         const url = getAbsoluteUrl('/categories');
+        console.log(`Fetching all categories from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         const data: Category[] = await response.json();
         return data;
@@ -129,10 +154,12 @@ export const getAllCategories = async (): Promise<Category[]> => {
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`);
+        console.log(`Fetching tools by category from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
-             if (response.status === 404) return []; // Category not found or no tools
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
+             if (response.status === 404) return []; // Category not found or no tools is valid
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         const data: Tool[] = await response.json();
         return data;
@@ -143,10 +170,12 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 };
 
 // Add a comment to a tool (this might be called client-side, relative URL is ok)
+// Let's keep this relative as it's likely called only from the client ToolDetailClient component
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        // Use relative URL if called from client-side, absolute if potentially server-side
-        const url = `/api/tools/${toolSlug}/comments`; // Relative path for client-side calls
+        // Use relative URL as this function is likely called from client-side components
+        const url = `/api/tools/${toolSlug}/comments`;
+        console.log(`Adding comment via: ${url}`); // Log the URL
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -166,15 +195,17 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
     }
 };
 
-// Fetch comments for a tool (this might be called client-side, relative URL is ok)
+// Fetch comments for a tool (likely called client-side, relative URL ok)
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        // Use relative URL if called from client-side, absolute if potentially server-side
-        const url = `/api/tools/${toolSlug}/comments`; // Relative path for client-side calls
+        // Use relative URL as this function is likely called from client-side components
+        const url = `/api/tools/${toolSlug}/comments`;
+        console.log(`Fetching comments from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
-            if (response.status === 404) return []; // Tool not found
-            throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.status === 404) return []; // Tool not found is valid
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         const data: Comment[] = await response.json();
         return data;
