@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, PlusCircle } from 'lucide-react';
+import { LogOut, PlusCircle, RefreshCw } from 'lucide-react'; // Added RefreshCw
 import {
   Dialog,
   DialogContent,
@@ -16,19 +16,57 @@ import {
 } from "@/components/ui/dialog";
 import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
-import categoriesData from '@/lib/data/categories.json'; // Import categories JSON
+// import categoriesData from '@/lib/data/categories.json'; // No longer using static JSON
+import { useToast } from '@/hooks/use-toast'; // Import useToast
+
+// Define Category type matching the API response
+interface Category {
+    _id: string; // MongoDB ID
+    slug: string;
+    name: string;
+    // Add other fields if needed
+}
+
+// API Endpoint URL for fetching categories
+const CATEGORIES_API_URL = '/api/categories'; // Uses rewrite
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = React.useState(false); // Assume not authenticated initially
   const [isAddToolDialogOpen, setIsAddToolDialogOpen] = React.useState(false);
   const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = React.useState(false);
+  const [categories, setCategories] = React.useState<{ value: string; label: string }[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = React.useState(true);
 
-  // Map categories from JSON for the dropdown
-  const categoriesForDropdown = categoriesData.map(cat => ({
-    value: cat.slug,
-    label: cat.name,
-  }));
+
+  // Fetch categories from the API
+   const fetchCategories = React.useCallback(async () => {
+     setIsLoadingCategories(true);
+     try {
+       const response = await fetch(CATEGORIES_API_URL);
+       if (!response.ok) {
+         throw new Error(`Failed to fetch categories: ${response.statusText}`);
+       }
+       const data: Category[] = await response.json();
+       const formattedCategories = data.map(cat => ({
+         value: cat.slug, // Use slug as the value for the dropdown
+         label: cat.name,
+       }));
+       setCategories(formattedCategories);
+       console.log("Fetched categories:", formattedCategories);
+     } catch (error: any) {
+       console.error('Error fetching categories:', error);
+       toast({
+         title: 'Error Fetching Categories',
+         description: error.message || 'Could not load categories for the dropdown.',
+         variant: 'destructive',
+       });
+       setCategories([]); // Set empty on error
+     } finally {
+       setIsLoadingCategories(false);
+     }
+   }, [toast]); // Add toast to dependency array
 
   React.useEffect(() => {
     // Check authentication status on component mount
@@ -36,8 +74,10 @@ export default function AdminDashboardPage() {
       router.replace('/admin'); // Redirect to login if not authenticated
     } else {
       setIsAuthenticated(true); // User is authenticated
+      fetchCategories(); // Fetch categories if authenticated
     }
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]); // Only run once on mount based on router, fetchCategories is stable due to useCallback
 
   const handleLogout = () => {
     sessionStorage.removeItem('isAdmin'); // Clear the session flag
@@ -60,6 +100,21 @@ export default function AdminDashboardPage() {
       <header className="flex flex-wrap justify-between items-center gap-4 mb-8 pt-4"> {/* Added flex-wrap and gap */}
         <h1 className="text-3xl font-bold">Admin Dashboard</h1>
         <div className="flex items-center gap-2">
+         {/* Refresh Categories Button */}
+         <Button
+            variant="outline"
+            size="icon"
+            onClick={fetchCategories}
+            disabled={isLoadingCategories}
+            title="Refresh Categories List"
+          >
+             {isLoadingCategories ? (
+                 <RefreshCw className="h-4 w-4 animate-spin" />
+             ) : (
+                 <RefreshCw className="h-4 w-4" />
+             )}
+         </Button>
+
           {/* Add Tool Dialog */}
           <Dialog open={isAddToolDialogOpen} onOpenChange={setIsAddToolDialogOpen}>
             <DialogTrigger asChild>
@@ -74,11 +129,19 @@ export default function AdminDashboardPage() {
                   Fill in the details for the new tool below. Click save when you're done.
                 </DialogDescription>
               </DialogHeader>
-              <AddToolForm
-                categories={categoriesForDropdown} // Pass fetched categories
-                onSuccess={() => setIsAddToolDialogOpen(false)} // Close dialog on success
-                onClose={() => setIsAddToolDialogOpen(false)} // Close dialog on cancel
-               />
+               {isLoadingCategories ? (
+                 <p className="text-muted-foreground p-4 text-center">Loading categories...</p>
+               ) : categories.length === 0 ? (
+                  <p className="text-destructive p-4 text-center">
+                      No categories found. Please add a category first or refresh the list.
+                  </p>
+               ) : (
+                  <AddToolForm
+                     categories={categories} // Pass fetched categories
+                     onSuccess={() => setIsAddToolDialogOpen(false)} // Close dialog on success
+                     onClose={() => setIsAddToolDialogOpen(false)} // Close dialog on cancel
+                  />
+               )}
             </DialogContent>
           </Dialog>
 
@@ -97,12 +160,10 @@ export default function AdminDashboardPage() {
                  </DialogDescription>
                </DialogHeader>
                <AddCategoryForm
-                 // In a real app, you'd refetch categories or update state here
                  onSuccess={() => {
                      setIsAddCategoryDialogOpen(false);
-                     // Potentially trigger a refetch of categories for the Add Tool form dropdown
-                     // For now, simply closing the dialog.
-                     // You might need state management or context to update categories globally.
+                     // Refetch categories after adding a new one
+                     fetchCategories();
                  }}
                  onClose={() => setIsAddCategoryDialogOpen(false)} // Close dialog on cancel
                />
@@ -123,12 +184,13 @@ export default function AdminDashboardPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-4">Use the buttons above to add new tools or categories.</p>
-           <p className="text-muted-foreground">Note: Currently, adding data saves locally. Implement backend/API calls to persist data (e.g., to Firebase Firestore or a server endpoint).</p>
+           <p className="text-muted-foreground">Data is now being saved to MongoDB via Firebase Cloud Functions.</p>
+           <p className="text-green-600 dark:text-green-400">Refresh categories if the dropdown in 'Add Tool' seems outdated.</p>
            <p>Future enhancements could include:</p>
            <ul className="list-disc list-inside text-muted-foreground space-y-1 mt-2">
-             <li>Saving data to a database (like Firebase)</li>
-             <li>Editing existing tools and categories</li>
-             <li>Deleting tools and categories</li>
+             <li>Editing existing tools and categories via API</li>
+             <li>Deleting tools and categories via API</li>
+             <li>Adding authentication to API endpoints</li>
              <li>Viewing site statistics</li>
            </ul>
         </CardContent>

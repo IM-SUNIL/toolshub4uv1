@@ -37,7 +37,7 @@ const generateSlug = (name: string) => {
 };
 
 
-// Define Zod schema for validation (ensure it matches the expected structure for JSON)
+// Define Zod schema for validation (ensure it matches the expected structure for the API)
 const toolFormSchema = z.object({
   toolName: z.string().min(2, { message: 'Tool name must be at least 2 characters.' }),
   imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }).optional().or(z.literal('')), // Optional image URL
@@ -59,11 +59,9 @@ interface AddToolFormProps {
   onClose: () => void; // Callback to close the dialog/form
 }
 
-// IMPORTANT: Replace with your actual Firebase Cloud Function URL
-// Example format: https://us-central1-your-project-id.cloudfunctions.net/updateToolJson
-// The placeholder below is replaced with a functional example.
-// **YOU MUST REPLACE THIS WITH YOUR DEPLOYED FUNCTION'S URL**
-const CLOUD_FUNCTION_URL = 'https://us-central1-toolshub4u-project.cloudfunctions.net/updateToolJson'; // Replace with your actual URL
+// API Endpoint URL for adding tools (relative path works if frontend and backend are on the same domain)
+// If deploying separately or using emulators with different ports, use the full URL
+const ADD_TOOL_API_URL = '/api/tools/add'; // Uses the rewrite in firebase.json
 
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
@@ -84,75 +82,66 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
     },
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [toolSlug, setToolSlug] = React.useState(''); // State to store generated slug
+
+   // Watch toolName field and generate slug
+   const watchedToolName = form.watch('toolName');
+   React.useEffect(() => {
+       if (watchedToolName) {
+           setToolSlug(generateSlug(watchedToolName));
+       } else {
+           setToolSlug('');
+       }
+   }, [watchedToolName]);
+
 
   async function onSubmit(data: ToolFormValues) {
     setIsSubmitting(true);
 
-    // Prepare the data in the structure expected by tools.json
-    const newTool = {
-        id: generateSlug(data.toolName), // Generate slug as ID
+    // Prepare the data in the structure expected by the backend API
+    const newToolPayload = {
+        slug: toolSlug, // Use the generated slug
         name: data.toolName,
-        image: data.imageUrl || `https://picsum.photos/seed/${generateSlug(data.toolName)}/600/400`, // Use slug for seed or default
+        image: data.imageUrl || `https://picsum.photos/seed/${toolSlug}/600/400`, // Use slug for seed or default
         categorySlug: data.categorySlug,
         isFree: data.priceType === 'Free',
         rating: data.rating,
         summary: data.shortDescription,
-        description: data.fullDescription, // Keep as HTML string if backend expects it
-        // Convert usage steps string (one per line) into array of objects
-        // IMPORTANT: The backend function needs to know which icon to use if specified.
-        // Here, we omit iconName, assuming backend handles it or it's not used yet.
+        description: data.fullDescription,
         usageSteps: data.usageSteps?.split('\n').filter(step => step.trim() !== '').map(step => ({ text: step.trim() })) || [],
         websiteLink: data.websiteLink,
         tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
-        comments: [], // Initialize with empty comments
-        relatedToolIds: [], // Initialize related IDs
-        createdAt: new Date().toISOString(), // Add timestamp
+        // Comments, relatedToolIds, createdAt, updatedAt will be handled by backend/DB defaults
     };
 
-    console.log('Submitting New Tool Data:', JSON.stringify(newTool, null, 2));
-
-    // Check if the URL is still the placeholder
-     if (CLOUD_FUNCTION_URL.includes('YOUR_CLOUD_FUNCTION_ENDPOINT_URL')) {
-       console.error("Error: Firebase Cloud Function URL is not set correctly. Please update 'CLOUD_FUNCTION_URL' in AddToolForm.tsx with your deployed function's URL.");
-       toast({
-         title: 'Configuration Error',
-         description: 'Cloud Function URL not set. Cannot save tool.',
-         variant: 'destructive',
-         duration: 7000,
-       });
-       setIsSubmitting(false);
-       return;
-     }
-
+    console.log('Submitting New Tool Payload:', JSON.stringify(newToolPayload, null, 2));
 
     try {
-        const response = await fetch(CLOUD_FUNCTION_URL, {
+        const response = await fetch(ADD_TOOL_API_URL, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',
-             // Add Authorization header if your function requires it
-             // 'Authorization': `Bearer YOUR_ID_TOKEN`
+             // Add Authorization header if your API requires it later
+             // 'Authorization': `Bearer YOUR_AUTH_TOKEN`
             },
-            body: JSON.stringify(newTool), // Send the processed data
+            body: JSON.stringify(newToolPayload), // Send the processed data
         });
 
         const result = await response.json(); // Get response body
 
         if (!response.ok) {
-            // Try to parse more specific error from GitHub if available
-            if (response.status === 404 && result.message && result.message.includes('Not Found')) {
-                throw new Error(`GitHub file path not found. Check Firebase Function config for 'github.path'. Server message: ${result.message}`);
-            } else if (response.status === 401) {
-                 throw new Error(`GitHub Authentication failed. Check Firebase Function config for 'github.token'. Server message: ${result.message}`);
-            } else if (response.status === 422 && result.message && result.message.includes('sha')) {
-                 throw new Error(`GitHub file conflict (SHA mismatch). The file may have changed. Please try again. Server message: ${result.message}`);
-             }
-             throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            // Handle specific error messages from the backend
+            let errorMsg = result.msg || `HTTP error! status: ${response.status}`;
+            if (result.errors) {
+                 // Append validation errors if they exist
+                 errorMsg += ` Details: ${result.errors.join(', ')}`;
+            }
+            throw new Error(errorMsg);
         }
 
         toast({
             title: 'Success!',
-            description: `Tool "${data.toolName}" added successfully to GitHub!`,
+            description: `Tool "${data.toolName}" added successfully!`,
             duration: 5000,
         });
         onSuccess(); // Close the dialog
@@ -162,7 +151,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         console.error('Error submitting tool:', error);
         toast({
             title: 'Error Saving Tool',
-            description: error.message || 'Failed to save the tool to GitHub. Check console for details.',
+            description: error.message || 'Failed to save the tool. Check console for details.',
             variant: 'destructive',
             duration: 7000,
         });
@@ -189,6 +178,17 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
               </FormItem>
             )}
           />
+
+          {/* Tool Slug (Readonly, generated from Name) */}
+          <FormItem>
+             <FormLabel>Tool Slug (Auto-generated)</FormLabel>
+             <FormControl>
+                <Input placeholder="Unique identifier..." value={toolSlug} readOnly disabled className="bg-muted/50 cursor-not-allowed"/>
+             </FormControl>
+              <FormDescription>This unique ID is generated from the name and used in the URL.</FormDescription>
+             <FormMessage />
+          </FormItem>
+
 
           {/* Image URL (Optional) */}
           <FormField
@@ -238,7 +238,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
                     <SelectContent>
                         {categories.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>
-                            {cat.label}
+                            {cat.label} {/* Display category name */}
                         </SelectItem>
                         ))}
                     </SelectContent>
@@ -297,9 +297,9 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
               <FormItem>
                 <FormLabel>Full Description</FormLabel>
                 <FormControl>
-                  <Textarea rows={5} placeholder="Detailed explanation for the tool detail page. You can use basic HTML." {...field} />
+                  <Textarea rows={5} placeholder="Detailed explanation for the tool detail page. You can use basic HTML or Markdown." {...field} />
                 </FormControl>
-                 <FormDescription>Supports basic HTML tags like &lt;p&gt;, &lt;ul&gt;, &lt;li&gt;, &lt;strong&gt;.</FormDescription>
+                 <FormDescription>Supports basic HTML or Markdown for formatting.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -315,7 +315,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
                 <FormControl>
                   <Textarea rows={4} placeholder="Enter steps, one per line. e.g.,&#10;1. Upload your file.&#10;2. Select options.&#10;3. Click Convert." {...field} />
                 </FormControl>
-                 <FormDescription>Enter each step on a new line.</FormDescription>
+                 <FormDescription>Enter each step on a new line. Will be stored as an array.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -346,7 +346,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
                 <FormControl>
                   <Input placeholder="Comma-separated tags, e.g., pdf, converter, productivity" {...field} />
                 </FormControl>
-                 <FormDescription>Helps users find the tool via search.</FormDescription>
+                 <FormDescription>Helps users find the tool via search. Will be stored as an array.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -1,5 +1,9 @@
 
 {
+  "functions": {
+     "source": "functions",
+     "runtime": "nodejs18" // Ensure runtime matches your functions/package.json engine
+  },
   "hosting": {
     "public": "public",
     "ignore": [
@@ -9,11 +13,15 @@
     ],
     "rewrites": [
       {
-        "source": "/tools/**",
+         "source": "/api/**", // Route all /api calls to the 'api' function
+         "function": "api"
+      },
+      {
+        "source": "/tools/**", // Keep existing frontend rewrites
         "destination": "/index.html"
       },
        {
-        "source": "**",
+        "source": "**", // Catch-all for frontend routes
         "destination": "/index.html"
       }
     ],

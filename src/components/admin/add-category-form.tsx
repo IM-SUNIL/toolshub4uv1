@@ -62,9 +62,8 @@ interface AddCategoryFormProps {
   onClose: () => void; // Callback to close the dialog/form
 }
 
-// TODO: Replace with your actual Firebase Cloud Function URL for categories
-const CATEGORY_CLOUD_FUNCTION_URL = 'YOUR_CATEGORY_CLOUD_FUNCTION_ENDPOINT_URL/updateCategoryJson';
-// Example: const CATEGORY_CLOUD_FUNCTION_URL = 'https://us-central1-your-project-id.cloudfunctions.net/updateCategoryJson';
+// API Endpoint URL for adding categories
+const ADD_CATEGORY_API_URL = '/api/categories/add';
 
 
 export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormProps) {
@@ -80,82 +79,69 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
     },
   });
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [categorySlug, setCategorySlug] = React.useState(''); // State for generated slug
+
+   // Watch categoryName field and generate slug
+   const watchedCategoryName = form.watch('categoryName');
+   React.useEffect(() => {
+       if (watchedCategoryName) {
+           setCategorySlug(generateSlug(watchedCategoryName));
+       } else {
+           setCategorySlug('');
+       }
+   }, [watchedCategoryName]);
+
 
   async function onSubmit(data: CategoryFormValues) {
     setIsSubmitting(true);
 
-    // Prepare the data in the structure expected by categories.json
-    const newCategory = {
-        slug: generateSlug(data.categoryName), // Generate slug
+    // Prepare the data in the structure expected by the backend API
+    const newCategoryPayload = {
+        slug: categorySlug, // Use generated slug
         name: data.categoryName,
         description: data.description,
         iconName: data.iconName, // Store the icon name string
-        imageURL: data.imageUrl || `https://picsum.photos/seed/${generateSlug(data.categoryName)}-cat/600/400`, // Use slug for seed or default
+        imageURL: data.imageUrl || `https://picsum.photos/seed/${categorySlug}-cat/600/400`, // Use slug for seed or default
         tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
-        createdAt: new Date().toISOString(), // Add timestamp
+        // createdAt will be handled by backend/DB default
     };
 
-    console.log('Submitting New Category Data:', JSON.stringify(newCategory, null, 2));
+    console.log('Submitting New Category Payload:', JSON.stringify(newCategoryPayload, null, 2));
 
-    // Check if the URL is set correctly
-    if (CATEGORY_CLOUD_FUNCTION_URL === 'YOUR_CATEGORY_CLOUD_FUNCTION_ENDPOINT_URL/updateCategoryJson') {
-        console.error("Error: Firebase Cloud Function URL for categories is not set. Please update 'CATEGORY_CLOUD_FUNCTION_URL' in AddCategoryForm.tsx.");
-        toast({
-            title: 'Configuration Error',
-            description: 'Category Cloud Function URL not set. Cannot save category.',
-            variant: 'destructive',
-            duration: 7000,
-        });
-        setIsSubmitting(false);
-        // --- TEMPORARY LOGGING FOR DEMO ---
-        console.log("--- SIMULATED SAVE ---");
-        console.log("Category data that *would* be sent:", JSON.stringify(newCategory, null, 2));
-        console.log("If the endpoint existed, this data would be POSTed to:", CATEGORY_CLOUD_FUNCTION_URL);
-        console.log("--- END SIMULATED SAVE ---");
-        toast({
-            title: 'Simulated Success!',
-            description: `Category "${data.categoryName}" processed (logged to console). Implement the backend endpoint to save permanently.`,
-            duration: 7000,
-        });
-        onSuccess(); // Still call onSuccess for UI feedback
-        form.reset();
-        // --- END TEMPORARY LOGGING ---
-        return; // Stop execution since endpoint isn't ready
-    }
-
-    // TODO: Implement the actual API call when the cloud function endpoint exists
     try {
-        // --- Placeholder for fetch call ---
-        // const response = await fetch(CATEGORY_CLOUD_FUNCTION_URL, {
-        //   method: 'POST',
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //   },
-        //   body: JSON.stringify(newCategory),
-        // });
-        // const result = await response.json();
-        // if (!response.ok) {
-        //   throw new Error(result.message || `HTTP error! status: ${response.status}`);
-        // }
-        // --- End Placeholder ---
+        const response = await fetch(ADD_CATEGORY_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+             // Add Authorization header if needed
+          },
+          body: JSON.stringify(newCategoryPayload),
+        });
 
-        // Simulate API call delay for now
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const result = await response.json();
+
+        if (!response.ok) {
+           let errorMsg = result.msg || `HTTP error! status: ${response.status}`;
+            if (result.errors) {
+                 errorMsg += ` Details: ${result.errors.join(', ')}`;
+            }
+            throw new Error(errorMsg);
+        }
 
         toast({
-        title: 'Success (Simulated)!', // Update title when endpoint is live
-        description: `Category "${data.categoryName}" processed. Implement backend endpoint to save to GitHub.`,
-        duration: 7000,
+            title: 'Success!',
+            description: `Category "${data.categoryName}" added successfully.`,
+            duration: 5000,
         });
-        onSuccess();
-        form.reset();
+        onSuccess(); // Close the dialog
+        form.reset(); // Reset form fields
     } catch (error: any) {
         console.error('Error submitting category:', error);
         toast({
-        title: 'Error Saving Category',
-        description: error.message || 'Failed to save the category. Check console for details.',
-        variant: 'destructive',
-        duration: 7000,
+            title: 'Error Saving Category',
+            description: error.message || 'Failed to save the category. Check console for details.',
+            variant: 'destructive',
+            duration: 7000,
         });
     } finally {
         setIsSubmitting(false);
@@ -180,6 +166,17 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
               </FormItem>
             )}
           />
+
+           {/* Category Slug (Readonly, generated from Name) */}
+           <FormItem>
+             <FormLabel>Category Slug (Auto-generated)</FormLabel>
+             <FormControl>
+                <Input placeholder="Unique identifier..." value={categorySlug} readOnly disabled className="bg-muted/50 cursor-not-allowed"/>
+             </FormControl>
+              <FormDescription>This unique ID is generated from the name and used in the URL.</FormDescription>
+             <FormMessage />
+           </FormItem>
+
 
           {/* Description */}
           <FormField
