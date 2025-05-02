@@ -55,6 +55,7 @@ const connectDB = async () => {
     // 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
     if (mongoose.connection.readyState === 0) {
         console.log('Attempting to connect to MongoDB...');
+        // useNewUrlParser and useUnifiedTopology are deprecated and no longer needed
         await mongoose.connect(mongoUri);
         console.log('\x1b[32m%s\x1b[0m', 'MongoDB Connected Successfully.'); // Green success text
     } else if (mongoose.connection.readyState === 1) {

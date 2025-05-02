@@ -74,6 +74,7 @@ const ToolSchema = new mongoose.Schema({
        name: { type: String, required: true },
        comment: { type: String, required: true },
        timestamp: { type: Date, default: Date.now }
+       // MongoDB will automatically add _id to subdocuments in arrays
      }
   ],
   // Or referenced example (requires Comment model and route):

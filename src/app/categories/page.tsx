@@ -7,13 +7,37 @@ import { Card } from '@/components/ui/card';
 import { Search } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { getAllCategories } from '@/lib/data/tools'; // Import the data loading function
+import { getAllCategories, getIconComponent, Category } from '@/lib/data/tools'; // Import data loading function and types
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
+
+// Metadata can be defined in layout.tsx or a separate metadata file if needed globally or higher up.
+// export const metadata: Metadata = { ... }; // Removed from client component
 
 export default function CategoriesPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const allCategories = getAllCategories(); // Fetch categories dynamically
-  const [filteredCategories, setFilteredCategories] = React.useState(allCategories);
+  const [allCategories, setAllCategories] = React.useState<Category[]>([]);
+  const [filteredCategories, setFilteredCategories] = React.useState<Category[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
+  // Fetch categories dynamically on component mount
+  React.useEffect(() => {
+      const fetchCategories = async () => {
+          setIsLoading(true);
+          try {
+              const data = await getAllCategories();
+              setAllCategories(data);
+              setFilteredCategories(data); // Initially show all categories
+          } catch (error) {
+              console.error("Failed to fetch categories:", error);
+              // Handle error state if needed
+          } finally {
+              setIsLoading(false);
+          }
+      };
+      fetchCategories();
+  }, []); // Empty dependency array ensures this runs only once
+
+  // Filter categories based on search term
   React.useEffect(() => {
     const lowerCaseSearchTerm = searchTerm.toLowerCase().trim();
     if (!lowerCaseSearchTerm) {
@@ -27,7 +51,7 @@ export default function CategoriesPage() {
       (category.tags && category.tags.some(tag => tag.toLowerCase().includes(lowerCaseSearchTerm)))
     );
     setFilteredCategories(filtered);
-  }, [searchTerm, allCategories]); // Add allCategories to dependencies
+  }, [searchTerm, allCategories]);
 
   const cardVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -61,7 +85,19 @@ export default function CategoriesPage() {
 
       {/* Categories Grid Section */}
       <section className="w-full">
-        {filteredCategories.length > 0 ? (
+        {isLoading ? (
+            // Loading State Skeletons
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+                {[...Array(8)].map((_, index) => ( // Show placeholders for categories
+                    <Card key={index} className="p-6 flex flex-col items-center justify-start h-full rounded-lg">
+                        <Skeleton className="h-10 w-10 rounded-full mb-4" />
+                        <Skeleton className="h-6 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-full" />
+                    </Card>
+                ))}
+            </div>
+        ) : filteredCategories.length > 0 ? (
+          // Categories Loaded and Found
           <motion.div
             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"
             initial="hidden"
@@ -69,7 +105,7 @@ export default function CategoriesPage() {
             variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
           >
             {filteredCategories.map((category, index) => {
-              const CategoryIcon = category.icon; // Get the icon component
+              const CategoryIcon = getIconComponent(category.iconName); // Get the icon component dynamically
               return (
                 // Link to the specific category page using the slug
                 <Link href={`/categories/${category.slug}`} key={category.slug} className="block h-full group">
@@ -91,6 +127,7 @@ export default function CategoriesPage() {
             })}
           </motion.div>
         ) : (
+          // No Categories Found Message
           <p className="text-center text-muted-foreground mt-8">No categories found matching your search.</p>
         )}
       </section>

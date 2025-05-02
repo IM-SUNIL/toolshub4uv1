@@ -1,20 +1,5 @@
 
-# Node Modules
 node_modules/
-
-# Dotenv environment variables file
 .env
-
-# Build output
-# lib/
-
-# Firebase Emulator logs
 *.log
-firebase-debug.log
-# excepto crashlytics logs
-*.crashlytics.log
-
-# Firebase Emulator data
-# If you want to gitignore emulator data, uncomment the following lines
-# local_emulator_data/
-# .firebase/emulators/
+*.lock
