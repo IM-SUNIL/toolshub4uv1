@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
-// import categoriesData from '@/lib/data/categories.json'; // No longer using static JSON
 import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 // Define Category type matching the API response
@@ -27,8 +26,8 @@ interface Category {
     // Add other fields if needed
 }
 
-// API Endpoint URL for fetching categories
-const CATEGORIES_API_URL = '/api/categories'; // Uses rewrite
+// API Endpoint URL for fetching categories (relative path, relies on Firebase rewrite)
+const CATEGORIES_API_URL = '/api/categories';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -43,10 +42,15 @@ export default function AdminDashboardPage() {
   // Fetch categories from the API
    const fetchCategories = React.useCallback(async () => {
      setIsLoadingCategories(true);
+     console.log(`Attempting to fetch categories from: ${CATEGORIES_API_URL}`); // Log URL
      try {
        const response = await fetch(CATEGORIES_API_URL);
+       console.log(`Fetch response status for ${CATEGORIES_API_URL}: ${response.status}`); // Log status
+
        if (!response.ok) {
-         throw new Error(`Failed to fetch categories: ${response.statusText}`);
+         const errorText = await response.text(); // Get error body
+         console.error(`Failed to fetch categories. Status: ${response.status}, StatusText: ${response.statusText}, Body: ${errorText}`);
+         throw new Error(`Failed to fetch categories: ${response.statusText} (Status: ${response.status})`);
        }
        const data: Category[] = await response.json();
        const formattedCategories = data.map(cat => ({
@@ -54,13 +58,14 @@ export default function AdminDashboardPage() {
          label: cat.name,
        }));
        setCategories(formattedCategories);
-       console.log("Fetched categories:", formattedCategories);
+       console.log("Fetched categories successfully:", formattedCategories);
      } catch (error: any) {
        console.error('Error fetching categories:', error);
        toast({
          title: 'Error Fetching Categories',
-         description: error.message || 'Could not load categories for the dropdown.',
+         description: error.message || 'Could not load categories for the dropdown. Ensure Firebase emulators (functions) are running or the API is deployed.',
          variant: 'destructive',
+         duration: 10000, // Longer duration for error
        });
        setCategories([]); // Set empty on error
      } finally {
