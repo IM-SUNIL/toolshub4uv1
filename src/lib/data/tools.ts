@@ -57,20 +57,32 @@ export const iconMap: { [key: string]: LucideIcon } = {
 };
 
 // --- API Endpoints ---
-// Use relative paths which will be resolved by Next.js/Firebase rewrites
-const API_BASE_URL = '/api'; // Assuming Firebase rewrite proxies /api to your function
+// Use absolute URLs for server-side fetching
+// IMPORTANT: Replace with your actual deployed function URL or localhost emulator URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://127.0.0.1:5001/toolshub4u/us-central1/api'; // Default to emulator URL
 const TOOLS_API_ENDPOINT = `${API_BASE_URL}/tools`;
 const CATEGORIES_API_ENDPOINT = `${API_BASE_URL}/categories`;
 
+
+// Helper function to create absolute URLs for fetch
+const getAbsoluteUrl = (path: string): string => {
+  // If path already starts with http, assume it's absolute
+  if (path.startsWith('http')) {
+    return path;
+  }
+  // Ensure no double slashes
+  return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+};
 
 // --- Data Fetching Functions (using fetch API) ---
 
 // Fetch all tools
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const response = await fetch(TOOLS_API_ENDPOINT);
+        const url = getAbsoluteUrl('/tools');
+        const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
         }
         const data: Tool[] = await response.json();
         return data;
@@ -83,10 +95,11 @@ export const getAllTools = async (): Promise<Tool[]> => {
 // Fetch a single tool by slug
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
-        const response = await fetch(`${TOOLS_API_ENDPOINT}/${slug}`);
+        const url = getAbsoluteUrl(`/tools/${slug}`);
+        const response = await fetch(url);
         if (!response.ok) {
             if (response.status === 404) return null; // Not found
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
         }
         const data: Tool = await response.json();
         return data;
@@ -99,9 +112,10 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 // Fetch all categories
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const response = await fetch(CATEGORIES_API_ENDPOINT);
+        const url = getAbsoluteUrl('/categories');
+        const response = await fetch(url);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
         }
         const data: Category[] = await response.json();
         return data;
@@ -114,10 +128,11 @@ export const getAllCategories = async (): Promise<Category[]> => {
 // Fetch tools by category slug
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
-        const response = await fetch(`${CATEGORIES_API_ENDPOINT}/${categorySlug}/tools`);
+        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`);
+        const response = await fetch(url);
         if (!response.ok) {
              if (response.status === 404) return []; // Category not found or no tools
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}`);
         }
         const data: Tool[] = await response.json();
         return data;
@@ -127,10 +142,12 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
     }
 };
 
-// Add a comment to a tool
+// Add a comment to a tool (this might be called client-side, relative URL is ok)
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const response = await fetch(`${TOOLS_API_ENDPOINT}/${toolSlug}/comments`, {
+        // Use relative URL if called from client-side, absolute if potentially server-side
+        const url = `/api/tools/${toolSlug}/comments`; // Relative path for client-side calls
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -149,10 +166,12 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
     }
 };
 
-// Fetch comments for a tool
+// Fetch comments for a tool (this might be called client-side, relative URL is ok)
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        const response = await fetch(`${TOOLS_API_ENDPOINT}/${toolSlug}/comments`);
+        // Use relative URL if called from client-side, absolute if potentially server-side
+        const url = `/api/tools/${toolSlug}/comments`; // Relative path for client-side calls
+        const response = await fetch(url);
         if (!response.ok) {
             if (response.status === 404) return []; // Tool not found
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -199,7 +218,7 @@ export const renderStars = (rating: number): React.ReactNode[] => {
 export const getFeaturedTools = async (): Promise<Tool[]> => {
     const allTools = await getAllTools();
     // Implement logic to determine "featured" tools (e.g., based on rating, tag, etc.)
-    return allTools.slice(0, 6); // Simple example: first 6 tools
+    return allTools.sort((a, b) => b.rating - a.rating).slice(0, 6); // Simple example: top 6 rated tools
 };
 
 // Example placeholder for related tools
