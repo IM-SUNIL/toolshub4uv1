@@ -18,6 +18,7 @@ import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
 import { useToast } from '@/hooks/use-toast'; // Import useToast
 import { Skeleton } from '@/components/ui/skeleton'; // For loading state
+import { getAbsoluteUrl } from '@/lib/data/tools'; // Import getAbsoluteUrl
 
 // Define Category type matching the API response
 interface Category {
@@ -27,8 +28,8 @@ interface Category {
     // Add other fields if needed
 }
 
-// API Endpoint URL for fetching categories (relative path, relies on Firebase rewrite)
-const CATEGORIES_API_URL = '/api/categories';
+// API Endpoint URL for fetching categories
+const CATEGORIES_API_PATH = '/api/categories'; // Relative path for API
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -43,16 +44,17 @@ export default function AdminDashboardPage() {
   // Fetch categories from the API
    const fetchCategories = React.useCallback(async () => {
      setIsLoadingCategories(true);
-     console.log(`Attempting to fetch categories from: ${CATEGORIES_API_URL}`); // Log URL
+     const categoriesApiUrl = getAbsoluteUrl(CATEGORIES_API_PATH);
+     console.log(`Attempting to fetch categories from: ${categoriesApiUrl}`); // Log URL
      try {
-       const response = await fetch(CATEGORIES_API_URL);
-       console.log(`Fetch response status for ${CATEGORIES_API_URL}: ${response.status}`); // Log status
+       const response = await fetch(categoriesApiUrl);
+       console.log(`Fetch response status for ${categoriesApiUrl}: ${response.status}`); // Log status
 
        if (!response.ok) {
          const errorText = await response.text(); // Get error body
          console.error(`Failed to fetch categories. Status: ${response.status}, StatusText: ${response.statusText}, Body: ${errorText}`);
          // Improved error message for toast
-         throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}. URL: ${CATEGORIES_API_URL}. Ensure API/emulators are running and firebase.json rewrites are correct.`);
+         throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText}. URL: ${categoriesApiUrl}. Ensure API/emulators are running and environment variables (like NEXT_PUBLIC_API_BASE_URL) are correct.`);
        }
        const data: Category[] = await response.json();
        const formattedCategories = data.map(cat => ({

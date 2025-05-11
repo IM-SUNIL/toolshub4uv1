@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getAbsoluteUrl } from '@/lib/data/tools'; // Import getAbsoluteUrl
 
 // Helper function to generate a simple slug (consider more robust slugification if needed)
 const generateSlug = (name: string) => {
@@ -59,9 +60,8 @@ interface AddToolFormProps {
   onClose: () => void; // Callback to close the dialog/form
 }
 
-// API Endpoint URL for adding tools (relative path works if frontend and backend are on the same domain)
-// If deploying separately or using emulators with different ports, use the full URL
-const ADD_TOOL_API_URL = '/api/tools/add'; // Uses the rewrite in firebase.json
+// API Endpoint relative path for adding tools
+const ADD_TOOL_API_PATH = '/api/tools/add';
 
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
@@ -97,6 +97,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
 
   async function onSubmit(data: ToolFormValues) {
     setIsSubmitting(true);
+    const addToolApiUrl = getAbsoluteUrl(ADD_TOOL_API_PATH);
 
     // Prepare the data in the structure expected by the backend API
     const newToolPayload = {
@@ -114,10 +115,10 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         // Comments, relatedToolIds, createdAt, updatedAt will be handled by backend/DB defaults
     };
 
-    console.log('Submitting New Tool Payload:', JSON.stringify(newToolPayload, null, 2));
+    console.log('Submitting New Tool Payload to URL:', addToolApiUrl, JSON.stringify(newToolPayload, null, 2));
 
     try {
-        const response = await fetch(ADD_TOOL_API_URL, {
+        const response = await fetch(addToolApiUrl, {
             method: 'POST',
             headers: {
             'Content-Type': 'application/json',

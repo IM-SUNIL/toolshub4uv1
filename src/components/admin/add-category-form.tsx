@@ -22,6 +22,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Zap, FileText, Scissors, Video, Code } from 'lucide-react'; // Import icons
+import { getAbsoluteUrl } from '@/lib/data/tools'; // Import getAbsoluteUrl
 
 // Helper function to generate a simple slug
 const generateSlug = (name: string) => {
@@ -62,8 +63,8 @@ interface AddCategoryFormProps {
   onClose: () => void; // Callback to close the dialog/form
 }
 
-// API Endpoint URL for adding categories
-const ADD_CATEGORY_API_URL = '/api/categories/add';
+// API Endpoint relative path for adding categories
+const ADD_CATEGORY_API_PATH = '/api/categories/add';
 
 
 export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormProps) {
@@ -94,6 +95,7 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
 
   async function onSubmit(data: CategoryFormValues) {
     setIsSubmitting(true);
+    const addCategoryApiUrl = getAbsoluteUrl(ADD_CATEGORY_API_PATH);
 
     // Prepare the data in the structure expected by the backend API
     const newCategoryPayload = {
@@ -106,10 +108,10 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
         // createdAt will be handled by backend/DB default
     };
 
-    console.log('Submitting New Category Payload:', JSON.stringify(newCategoryPayload, null, 2));
+    console.log('Submitting New Category Payload to URL:', addCategoryApiUrl, JSON.stringify(newCategoryPayload, null, 2));
 
     try {
-        const response = await fetch(ADD_CATEGORY_API_URL, {
+        const response = await fetch(addCategoryApiUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
