@@ -1,14 +1,22 @@
+
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./db'); // Import the DB connection function
 
 // --- Connect to MongoDB ---
-// Call connectDB here to establish the connection when the function instance starts
-// It's better to call connectDB within the function exports if the connection string relies on Firebase config,
-// or ensure it's called reliably when the instance spins up.
-// For simplicity here, we'll call it once. It includes console logs for connection status.
-connectDB();
+// Call connectDB here to establish the connection when the function instance starts.
+// It now returns a promise that resolves to 'yes' or 'no'.
+connectDB().then(status => {
+  console.log(`Initial MongoDB connection attempt. Reported Status: ${status}`);
+  if (status === 'no' && process.env.NODE_ENV !== 'development') { // Stricter check for production
+    // Consider if you want to prevent function deployment or throw a fatal error for production
+    // For now, it just logs, but the function might still deploy and fail at runtime.
+    console.error('\x1b[31m%s\x1b[0m', 'CRITICAL: MongoDB connection failed during initialization. API might not function correctly.');
+  }
+}).catch(error => {
+    console.error("Error during initial DB connection setup in index.js:", error);
+});
 // Note: Firebase Cloud Functions can keep connections alive between invocations (warm starts)
 // mongoose handles connection pooling internally.
 
