@@ -70,7 +70,7 @@ if (typeof window !== 'undefined' && !API_BASE_URL) { // Log warning only on cli
 }
 
 
-const getAbsoluteUrl = (path: string): string => {
+export const getAbsoluteUrl = (path: string): string => {
     if (path.startsWith('http')) {
         return path;
     }
@@ -98,10 +98,10 @@ const getAbsoluteUrl = (path: string): string => {
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl('/api/tools'); // Ensure path starts with /api
-        console.log(`Fetching all tools from: ${url}`);
+        console.log(`Fetching all tools from: ${url}`); // Log the URL being fetched
         const response = await fetch(url);
         if (!response.ok) {
-            const errorText = await response.text();
+            const errorText = await response.text(); // Get more details on the error
             console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
             throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
@@ -116,7 +116,7 @@ export const getAllTools = async (): Promise<Tool[]> => {
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
         const url = getAbsoluteUrl(`/api/tools/${slug}`);
-        console.log(`Fetching tool by slug from: ${url}`);
+        console.log(`Fetching tool by slug from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
             if (response.status === 404) return null;
@@ -135,7 +135,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
         const url = getAbsoluteUrl('/api/categories');
-        console.log(`Fetching all categories from: ${url}`);
+        console.log(`Fetching all categories from: ${url}`); // Log the URL
         const response = await fetch(url);
         if (!response.ok) {
             const errorText = await response.text();
@@ -153,7 +153,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl(`/api/categories/${categorySlug}/tools`);
-        console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
+        console.log(`Fetching tools for category ${categorySlug} from: ${url}`); // Log URL
         const response = await fetch(url);
         if (!response.ok) {
             if (response.status === 404) return [];
