@@ -5,6 +5,9 @@ const connectDB = require('./db'); // Import the DB connection function
 
 // --- Connect to MongoDB ---
 // Call connectDB here to establish the connection when the function instance starts
+// It's better to call connectDB within the function exports if the connection string relies on Firebase config,
+// or ensure it's called reliably when the instance spins up.
+// For simplicity here, we'll call it once. It includes console logs for connection status.
 connectDB();
 // Note: Firebase Cloud Functions can keep connections alive between invocations (warm starts)
 // mongoose handles connection pooling internally.
@@ -19,12 +22,9 @@ app.use(cors({ origin: true }));
 app.use(express.json());
 
 // --- API Routes ---
-// Example: Mount tool routes under /api/tools
 app.use('/api/tools', require('./routes/tools'));
-// Example: Mount category routes under /api/categories
 app.use('/api/categories', require('./routes/categories'));
-// Add other routes (e.g., comments) here
-// app.use('/api/comments', require('./routes/comments')); // If using separate comment routes
+app.use('/api/seed', require('./routes/seed')); // Mount the seed route
 
 // --- Basic Test Route ---
 app.get('/api/hello', (req, res) => {
@@ -40,33 +40,3 @@ app.get('/api/hello', (req, res) => {
 // --- Expose Express API as a single Firebase Function ---
 // The region can be specified if needed, e.g., functions.region('us-central1')
 exports.api = functions.https.onRequest(app);
-
-
-// --- Keep the GitHub update function IF still needed ---
-// If you still need the GitHub JSON update functionality alongside the API,
-// keep the original `updateToolJson` export below. Otherwise, remove it.
-
-/*
-const { Octokit } = require("@octokit/rest");
-const admin = require("firebase-admin"); // Needed if using admin sdk elsewhere
-
-// Helper function to safely get Firebase function config
-const getConfig = (key) => {
-    // ... (keep original getConfig if needed)
-};
-
-const GITHUB_TOKEN = getConfig("token");
-// ... (keep other GitHub consts if needed)
-
-const validateToolData = (toolData) => {
-    // ... (keep original validateToolData if needed)
-};
-
-exports.updateToolJson = functions.https.onRequest(async (req, res) => {
-    // ... (keep original GitHub update logic if needed)
-    // IMPORTANT: This function will now conflict with the `/api` function
-    // if requests are made to the root. You might need to rename this function
-    // or adjust routing if keeping both.
-    // Example rename: exports.updateGitHubJson = functions.https.onRequest(...)
-});
-*/
