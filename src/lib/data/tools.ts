@@ -1,3 +1,4 @@
+
 // In a real application, this data will come from the MongoDB database via API calls.
 
 import type { LucideIcon } from 'lucide-react';
@@ -42,6 +43,14 @@ export interface Category {
   createdAt: string | Date;
 }
 
+// API Response Structure
+interface ApiResponse<T> {
+    success: boolean;
+    data: T | null;
+    error: string | null;
+}
+
+
 export const iconMap: { [key: string]: LucideIcon } = {
     Zap,
     FileText,
@@ -82,7 +91,6 @@ export const getAbsoluteUrl = (path: string): string => {
             `CRITICAL: NEXT_PUBLIC_API_BASE_URL is not set. Server-side fetch for path "${path}" will likely fail.`
         );
         // Attempting a relative path server-side usually fails or hits the wrong host.
-        // Consider throwing an error or having a default for SSR if this is a common case without the env var.
         // For now, returning the relative path and letting it fail to highlight the issue.
         return path;
     }
@@ -97,16 +105,17 @@ export const getAbsoluteUrl = (path: string): string => {
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl('/api/tools'); // Ensure path starts with /api
-        console.log(`Fetching all tools from: ${url}`); // Log the URL being fetched
+        const url = getAbsoluteUrl('/api/tools');
+        console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
-        if (!response.ok) {
-            const errorText = await response.text(); // Get more details on the error
-            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+        const result: ApiResponse<Tool[]> = await response.json();
+
+        if (!response.ok || !result.success) {
+            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+            throw new Error(errorMsg);
         }
-        const data: Tool[] = await response.json();
-        return data;
+        return result.data || [];
     } catch (error) {
         console.error("Error in getAllTools:", error);
         return [];
@@ -116,16 +125,17 @@ export const getAllTools = async (): Promise<Tool[]> => {
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
         const url = getAbsoluteUrl(`/api/tools/${slug}`);
-        console.log(`Fetching tool by slug from: ${url}`); // Log the URL
+        console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
+        const result: ApiResponse<Tool> = await response.json();
+
         if (!response.ok) {
-            if (response.status === 404) return null;
-            const errorText = await response.text();
-            console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+             if (response.status === 404) return null;
+             const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+             throw new Error(errorMsg);
         }
-        const data: Tool = await response.json();
-        return data;
+        return result.data;
     } catch (error) {
         console.error(`Error in getToolBySlug for ${slug}:`, error);
         return null;
@@ -135,15 +145,16 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
         const url = getAbsoluteUrl('/api/categories');
-        console.log(`Fetching all categories from: ${url}`); // Log the URL
+        console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+        const result: ApiResponse<Category[]> = await response.json();
+
+        if (!response.ok || !result.success) {
+            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+            throw new Error(errorMsg);
         }
-        const data: Category[] = await response.json();
-        return data;
+        return result.data || [];
     } catch (error) {
         console.error("Error in getAllCategories:", error);
         return [];
@@ -153,16 +164,17 @@ export const getAllCategories = async (): Promise<Category[]> => {
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl(`/api/categories/${categorySlug}/tools`);
-        console.log(`Fetching tools for category ${categorySlug} from: ${url}`); // Log URL
+        console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
         const response = await fetch(url);
+        const result: ApiResponse<Tool[]> = await response.json();
+
         if (!response.ok) {
-            if (response.status === 404) return [];
-            const errorText = await response.text();
-            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+            if (response.status === 404 && !result.success) return []; // Category might exist but have no tools or category itself not found
+            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+            throw new Error(errorMsg);
         }
-        const data: Tool[] = await response.json();
-        return data;
+        return result.data || [];
     } catch (error) {
         console.error(`Error in getToolsByCategorySlug for ${categorySlug}:`, error);
         return [];
@@ -171,7 +183,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`); // Use getAbsoluteUrl for consistency
+        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`);
         console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
@@ -180,12 +192,13 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
             },
             body: JSON.stringify({ name, comment }),
         });
-        const result = await response.json();
-        if (!response.ok) {
+        const result: ApiResponse<Comment> = await response.json();
+
+        if (!response.ok || !result.success) {
             console.error(`Error adding comment. Status: ${response.status}, Response: ${JSON.stringify(result)}`);
-            throw new Error(result.msg || `HTTP error! status: ${response.status}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status}`);
         }
-        return result.comment as Comment;
+        return result.data;
     } catch (error) {
         console.error(`Error in addCommentToTool for ${toolSlug}:`, error);
         return null;
@@ -197,19 +210,41 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
         const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`);
         console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
+        const result: ApiResponse<Comment[]> = await response.json();
+
         if (!response.ok) {
-            if (response.status === 404) return [];
-            const errorText = await response.text();
-            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+            if (response.status === 404 && !result.success) return [];
+            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+            throw new Error(errorMsg);
         }
-        const data: Comment[] = await response.json();
-        return data;
+        return result.data || [];
     } catch (error) {
         console.error(`Error in getCommentsForTool for ${toolSlug}:`, error);
         return [];
     }
 };
+
+// New function to fetch all comments (if needed for an admin panel or similar)
+export const getAllComments = async (): Promise<Comment[]> => {
+    try {
+        const url = getAbsoluteUrl('/api/comments');
+        console.log(`Fetching all comments from: ${url}`);
+        const response = await fetch(url);
+        const result: ApiResponse<Comment[]> = await response.json();
+
+        if (!response.ok || !result.success) {
+            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
+            throw new Error(errorMsg);
+        }
+        return result.data || [];
+    } catch (error) {
+        console.error("Error in getAllComments:", error);
+        return [];
+    }
+};
+
 
 export const getIconComponent = (iconName: string): LucideIcon => {
     return iconMap[iconName] || Zap;

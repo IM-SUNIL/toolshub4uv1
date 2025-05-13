@@ -1,3 +1,4 @@
+
 const express = require('express');
 const router = express.Router();
 const Tool = require('../models/Tool'); // Adjust path as needed
@@ -11,14 +12,14 @@ router.post('/add', async (req, res) => {
   // Basic validation (Mongoose schema validation handles more)
   const { name, slug, categorySlug, summary, description, websiteLink } = req.body;
   if (!name || !slug || !categorySlug || !summary || !description || !websiteLink) {
-    return res.status(400).json({ msg: 'Please include all required fields: name, slug, categorySlug, summary, description, websiteLink' });
+    return res.status(400).json({ success: false, data: null, error: 'Please include all required fields: name, slug, categorySlug, summary, description, websiteLink' });
   }
 
   try {
     // Check if tool with the same slug already exists
     let tool = await Tool.findOne({ slug: req.body.slug });
     if (tool) {
-      return res.status(400).json({ msg: `Tool with slug '${req.body.slug}' already exists.` });
+      return res.status(400).json({ success: false, data: null, error: `Tool with slug '${req.body.slug}' already exists.` });
     }
 
     // Create a new tool instance from the request body
@@ -30,7 +31,7 @@ router.post('/add', async (req, res) => {
     // Save the tool to the database
     await tool.save();
     console.log("Tool saved successfully:", tool);
-    res.status(201).json({ msg: 'Tool added successfully', tool });
+    res.status(201).json({ success: true, data: tool, error: null });
 
   } catch (err) {
     console.error("Error saving tool:", err.message);
@@ -38,9 +39,9 @@ router.post('/add', async (req, res) => {
      if (err.name === 'ValidationError') {
          // Extract validation messages
          const messages = Object.values(err.errors).map(val => val.message);
-         return res.status(400).json({ msg: 'Validation Error', errors: messages });
+         return res.status(400).json({ success: false, data: null, error: `Validation Error: ${messages.join(', ')}` });
      }
-    res.status(500).send('Server Error');
+    res.status(500).json({ success: false, data: null, error: 'Server Error while saving tool.'});
   }
 });
 
@@ -50,10 +51,10 @@ router.post('/add', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const tools = await Tool.find().sort({ createdAt: -1 }); // Sort by newest first
-    res.json(tools);
+    res.json({ success: true, data: tools, error: null });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).json({ success: false, data: null, error: 'Server Error while fetching tools.' });
   }
 });
 
@@ -67,15 +68,15 @@ router.get('/:slug', async (req, res) => {
     // .populate('categorySlug', 'name iconName');
 
     if (!tool) {
-      return res.status(404).json({ msg: 'Tool not found' });
+      return res.status(404).json({ success: false, data: null, error: 'Tool not found' });
     }
-    res.json(tool);
+    res.json({ success: true, data: tool, error: null });
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') { // Handle invalid ID format if using ObjectId
-       return res.status(404).json({ msg: 'Tool not found' });
-     }
-    res.status(500).send('Server Error');
+    // if (err.kind === 'ObjectId') { // Handle invalid ID format if using ObjectId
+    //    return res.status(404).json({ success: false, data: null, error: 'Tool not found (invalid ID format)' });
+    //  }
+    res.status(500).json({ success: false, data: null, error: 'Server Error while fetching tool.' });
   }
 });
 
@@ -88,14 +89,14 @@ router.post('/:toolSlug/comments', async (req, res) => {
     const toolSlug = req.params.toolSlug;
 
     if (!name || !comment) {
-        return res.status(400).json({ msg: 'Name and comment are required.' });
+        return res.status(400).json({ success: false, data: null, error: 'Name and comment are required.' });
     }
 
     try {
         const tool = await Tool.findOne({ slug: toolSlug });
 
         if (!tool) {
-            return res.status(404).json({ msg: 'Tool not found.' });
+            return res.status(404).json({ success: false, data: null, error: 'Tool not found.' });
         }
 
         const newComment = {
@@ -112,11 +113,11 @@ router.post('/:toolSlug/comments', async (req, res) => {
         // Find the newly added comment (MongoDB adds _id automatically)
         const addedComment = tool.comments[tool.comments.length - 1];
 
-        res.status(201).json({ msg: 'Comment added successfully', comment: addedComment });
+        res.status(201).json({ success: true, data: addedComment, error: null });
 
     } catch (err) {
         console.error("Error adding comment:", err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ success: false, data: null, error: 'Server Error while adding comment.' });
     }
 });
 
@@ -130,14 +131,14 @@ router.get('/:toolSlug/comments', async (req, res) => {
         const tool = await Tool.findOne({ slug: toolSlug }).select('comments'); // Select only the comments field
 
         if (!tool) {
-            return res.status(404).json({ msg: 'Tool not found.' });
+            return res.status(404).json({ success: false, data: null, error: 'Tool not found.' });
         }
 
-        res.json(tool.comments || []); // Return the comments array or an empty array
+        res.json({ success: true, data: tool.comments || [], error: null }); // Return the comments array or an empty array
 
     } catch (err) {
         console.error("Error fetching comments:", err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ success: false, data: null, error: 'Server Error while fetching comments.' });
     }
 });
 
