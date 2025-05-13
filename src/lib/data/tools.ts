@@ -65,16 +65,17 @@ export const iconMap: { [key: string]: LucideIcon } = {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-if (typeof window !== 'undefined' && !API_BASE_URL) { // Log warning only on client-side if not set
+// Log warning only once, ideally on module load, and only on client-side if relevant for client logic
+if (typeof window !== 'undefined' && !API_BASE_URL) {
     console.warn(
         '\x1b[33m%s\x1b[0m', // Yellow text
-        'Warning: NEXT_PUBLIC_API_BASE_URL environment variable is not set.'
+        'Warning: NEXT_PUBLIC_API_BASE_URL environment variable is not set in .env file.'
     );
     console.warn(
-        'Client-side API calls will use relative paths. This is usually fine if Next.js dev server handles proxying or if served from the same domain as the API in production (e.g. via Firebase Hosting rewrites).'
+        'Client-side API calls will use relative paths (e.g., /api/tools). This is usually fine if Next.js dev server proxies requests (requires next.config.js rewrites for dev to Firebase emulators) or if served from the same domain as the API in production (e.g., via Firebase Hosting rewrites to Cloud Functions).'
     );
     console.warn(
-        'For local development with Firebase emulators, if you encounter issues with API calls, ensure NEXT_PUBLIC_API_BASE_URL is set in .env.local to point to your functions emulator URL, typically: http://127.0.0.1:5001/your-project-id/your-region/api'
+        'For local development with Firebase emulators, ensure NEXT_PUBLIC_API_BASE_URL is set in your root .env file to point to your functions emulator URL. Example: NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:5001/YOUR_PROJECT_ID/YOUR_REGION/api (replace placeholders). This makes API calls target the emulator directly.'
     );
 }
 
@@ -83,37 +84,45 @@ export const getAbsoluteUrl = (path: string): string => {
     if (path.startsWith('http')) {
         return path;
     }
-    // For server-side rendering/fetching (e.g. in Server Components, getStaticProps, getServerSideProps),
-    // API_BASE_URL is crucial.
-    if (typeof window === 'undefined' && !API_BASE_URL) {
-        console.error(
-            '\x1b[31m%s\x1b[0m', // Red text
-            `CRITICAL: NEXT_PUBLIC_API_BASE_URL is not set. Server-side fetch for path "${path}" will likely fail.`
-        );
-        // Attempting a relative path server-side usually fails or hits the wrong host.
-        // For now, returning the relative path and letting it fail to highlight the issue.
+
+    const BROWSER_API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    if (typeof window !== 'undefined') { // Client-side
+        if (BROWSER_API_BASE_URL) {
+            return `${BROWSER_API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+        }
+        // If NEXT_PUBLIC_API_BASE_URL is not set on client, use relative path.
+        // This relies on the browser resolving it or Next.js dev server proxying.
         return path;
     }
 
-    // For client-side, if API_BASE_URL is not set, use relative path.
-    if (typeof window !== 'undefined' && !API_BASE_URL) {
-        return path; // e.g., /api/tools
+    // Server-side
+    // For server-side fetches, NEXT_PUBLIC_API_BASE_URL is also available if defined.
+    // If not defined, robust server-side fetching needs a different strategy or a hardcoded internal URL.
+    // For now, prioritize NEXT_PUBLIC_API_BASE_URL if available, otherwise log critical error.
+    if (BROWSER_API_BASE_URL) {
+         return `${BROWSER_API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
     }
-    // If API_BASE_URL is set, use it for both client and server.
-    return `${API_BASE_URL!.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+
+    console.error(
+        '\x1b[31m%s\x1b[0m', // Red text
+        `CRITICAL: NEXT_PUBLIC_API_BASE_URL is not set. Server-side fetch for path "${path}" will use a relative path, which is unreliable. Please set this variable in your environment.`
+    );
+    // Fallback to relative path server-side (likely to fail but prevents crashing here)
+    return path;
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
         const url = getAbsoluteUrl('/api/tools');
-        console.log(`Fetching all tools from: ${url}`);
+        console.log(`Fetching all tools from: ${url}`); // Log the URL being fetched
         const response = await fetch(url);
         const result: ApiResponse<Tool[]> = await response.json();
 
         if (!response.ok || !result.success) {
-            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
+            const errorText = await response.text(); // Get more details on the error
             console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-            throw new Error(errorMsg);
+            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
         }
         return result.data || [];
     } catch (error) {
@@ -131,9 +140,9 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
         if (!response.ok) {
              if (response.status === 404) return null;
-             const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
-             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-             throw new Error(errorMsg);
+             const errorText = await response.text();
+             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+             throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
         }
         return result.data;
     } catch (error) {
@@ -150,9 +159,9 @@ export const getAllCategories = async (): Promise<Category[]> => {
         const result: ApiResponse<Category[]> = await response.json();
 
         if (!response.ok || !result.success) {
-            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
-            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-            throw new Error(errorMsg);
+            const errorText = await response.text();
+            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
         }
         return result.data || [];
     } catch (error) {
@@ -170,9 +179,9 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
         if (!response.ok) {
             if (response.status === 404 && !result.success) return []; // Category might exist but have no tools or category itself not found
-            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
-            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-            throw new Error(errorMsg);
+            const errorText = await response.text();
+            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
         }
         return result.data || [];
     } catch (error) {
@@ -195,8 +204,9 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
         const result: ApiResponse<Comment> = await response.json();
 
         if (!response.ok || !result.success) {
-            console.error(`Error adding comment. Status: ${response.status}, Response: ${JSON.stringify(result)}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`Error adding comment. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status}. Body: ${errorText}`);
         }
         return result.data;
     } catch (error) {
@@ -214,9 +224,9 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
 
         if (!response.ok) {
             if (response.status === 404 && !result.success) return [];
-            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
-            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-            throw new Error(errorMsg);
+            const errorText = await response.text();
+            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
         }
         return result.data || [];
     } catch (error) {
@@ -234,9 +244,9 @@ export const getAllComments = async (): Promise<Comment[]> => {
         const result: ApiResponse<Comment[]> = await response.json();
 
         if (!response.ok || !result.success) {
-            const errorMsg = result.error || `HTTP error! status: ${response.status} fetching ${url}`;
-            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}`);
-            throw new Error(errorMsg);
+            const errorText = await response.text();
+            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
         }
         return result.data || [];
     } catch (error) {
@@ -270,10 +280,92 @@ export const renderStars = (rating: number): React.ReactNode[] => {
 
 export const getFeaturedTools = async (): Promise<Tool[]> => {
     const allTools = await getAllTools();
-    return allTools.sort((a, b) => b.rating - a.rating).slice(0, 6);
+    // Sort by rating, then by creation date if ratings are equal (optional)
+    return allTools
+        .sort((a, b) => {
+            if (b.rating !== a.rating) {
+                return b.rating - a.rating;
+            }
+            // Fallback sort by date if ratings are equal, newest first
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        })
+        .slice(0, 6);
 };
 
-export const getRelatedTools = async (tool: Tool): Promise<Tool[]> => {
-    const categoryTools = await getToolsByCategorySlug(tool.categorySlug);
-    return categoryTools.filter(t => t._id !== tool._id).slice(0, 3);
+
+export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
+    const allTools = await getAllTools();
+    // Filter out the current tool
+    const otherTools = allTools.filter(t => t.slug !== currentTool.slug);
+
+    // Prioritize tools in the same category
+    const sameCategoryTools = otherTools
+        .filter(t => t.categorySlug === currentTool.categorySlug)
+        .sort((a, b) => b.rating - a.rating); // Sort by rating
+
+    // If not enough from the same category, fill with other highly-rated tools
+    let related = [...sameCategoryTools];
+    if (related.length < 3) {
+        const otherHighlyRatedTools = otherTools
+            .filter(t => t.categorySlug !== currentTool.categorySlug) // Exclude already considered
+            .sort((a, b) => b.rating - a.rating);
+        related = [...related, ...otherHighlyRatedTools].slice(0, 3);
+    }
+
+    return related.slice(0, 3); // Ensure max 3 related tools
+};
+
+// Helper to add a tool to Firebase Functions (simulates backend call)
+export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
+    try {
+        const url = getAbsoluteUrl('/api/tools/add'); // Ensure this matches your actual "add tool" API endpoint
+        console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add Authorization header if your API requires it
+            },
+            body: JSON.stringify(toolData),
+        });
+        const result: ApiResponse<Tool> = await response.json();
+
+        if (!response.ok || !result.success) {
+            const errorText = result.error || await response.text();
+            console.error(`Error adding tool to backend. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(`Failed to add tool: ${errorText}`);
+        }
+        console.log("Tool added successfully via backend:", result.data);
+        return result.data;
+    } catch (error) {
+        console.error("Error in addToolToBackend:", error);
+        return null;
+    }
+};
+
+// Helper to add a category to Firebase Functions
+export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 'createdAt'>): Promise<Category | null> => {
+    try {
+        const url = getAbsoluteUrl('/api/categories/add'); // Ensure this matches your "add category" API endpoint
+        console.log(`Adding category to backend via: ${url} with payload:`, categoryData);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(categoryData),
+        });
+        const result: ApiResponse<Category> = await response.json();
+
+        if (!response.ok || !result.success) {
+            const errorText = result.error || await response.text();
+            console.error(`Error adding category to backend. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
+            throw new Error(`Failed to add category: ${errorText}`);
+        }
+        console.log("Category added successfully via backend:", result.data);
+        return result.data;
+    } catch (error) {
+        console.error("Error in addCategoryToBackend:", error);
+        return null;
+    }
 };
