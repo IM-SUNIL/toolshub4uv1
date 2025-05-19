@@ -85,16 +85,20 @@ export const getAbsoluteUrl = (path: string): string => {
     }
     // Ensure API_BASE_URL does not have a trailing slash and path includes a leading slash for clarity if it's an endpoint.
     // If path starts with /api/, it's already specifying the full endpoint relative to base.
-    if (path.startsWith('/api/')) {
-        return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
+    // If path starts with /api/, it's already specifying the full endpoint relative to base.
+    if (path.startsWith('/tools') || path.startsWith('/categories') || path.startsWith('/comments') || path.startsWith('/seed')) {
+        return `${API_BASE_URL.replace(/\/api\/?$/, '')}/api${path.startsWith('/') ? path : '/' + path}`;
     }
-    // Otherwise, assume it's a path relative to /api/
-    return `${API_BASE_URL.replace(/\/$/, '')}/api${path.startsWith('/') ? path : '/' + path}`;
+    // Fallback for other paths or if /api/ is already part of path but not matching above
+    if (path.startsWith('/api/')) {
+         return `${API_BASE_URL.replace(/\/api\/?$/, '')}${path}`;
+    }
+    return `${API_BASE_URL.replace(/\/api\/?$/, '')}/api${path.startsWith('/') ? path : '/' + path}`;
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl('/api/tools'); // Endpoint is /api/tools
+        const url = getAbsoluteUrl('/tools/all'); // Endpoint is /tools/all
         console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool[]> = await response.json();
@@ -113,7 +117,7 @@ export const getAllTools = async (): Promise<Tool[]> => {
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl(`/api/tools/${slug}`); // Endpoint is /api/tools/:slug
+        const url = getAbsoluteUrl(`/tools/${slug}`); // Endpoint is /tools/:slug
         console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool> = await response.json();
@@ -133,7 +137,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/api/categories'); // Endpoint is /api/categories
+        const url = getAbsoluteUrl('/categories/all'); // Updated endpoint
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Category[]> = await response.json();
@@ -152,7 +156,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl(`/api/categories/${categorySlug}/tools`); // Endpoint is /api/categories/:categorySlug/tools
+        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`); // Endpoint is /categories/:categorySlug/tools
         console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool[]> = await response.json();
@@ -172,7 +176,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`); // Endpoint is /api/tools/:toolSlug/comments
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Endpoint is /tools/:toolSlug/comments
         console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
@@ -197,7 +201,7 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
 
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`); // Endpoint is /api/tools/:toolSlug/comments
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Endpoint is /tools/:toolSlug/comments
         console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Comment[]> = await response.json();
@@ -217,7 +221,7 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
 
 export const getAllComments = async (): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl('/api/comments'); // Endpoint is /api/comments
+        const url = getAbsoluteUrl('/comments'); // Endpoint is /comments
         console.log(`Fetching all comments from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Comment[]> = await response.json();
@@ -293,7 +297,7 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
 
 export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl('/api/tools/add'); // Endpoint is /api/tools/add
+        const url = getAbsoluteUrl('/tools/add'); // Endpoint is /tools/add
         console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
         const response = await fetch(url, {
             method: 'POST',
@@ -319,7 +323,7 @@ export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' 
 
 export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 'createdAt'>): Promise<Category | null> => {
     try {
-        const url = getAbsoluteUrl('/api/categories/add'); // Endpoint is /api/categories/add
+        const url = getAbsoluteUrl('/categories/add'); // Endpoint is /categories/add
         console.log(`Adding category to backend via: ${url} with payload:`, categoryData);
         const response = await fetch(url, {
             method: 'POST',
@@ -342,3 +346,8 @@ export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 
         return null;
     }
 };
+
+// Added for Admin Dashboard types
+export type { Tool as APITool, Category as APICategoryType };
+
+    
