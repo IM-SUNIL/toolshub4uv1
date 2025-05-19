@@ -61,7 +61,7 @@ interface AddToolFormProps {
 }
 
 // API Endpoint relative path for adding tools
-const ADD_TOOL_API_PATH = '/api/tools/add';
+const ADD_TOOL_API_PATH = '/tools/add'; // Updated path
 
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
@@ -132,7 +132,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
 
         if (!response.ok) {
             // Handle specific error messages from the backend
-            let errorMsg = result.msg || `HTTP error! status: ${response.status}`;
+            let errorMsg = result.msg || result.error || `HTTP error! status: ${response.status}`;
             if (result.errors) {
                  // Append validation errors if they exist
                  errorMsg += ` Details: ${result.errors.join(', ')}`;

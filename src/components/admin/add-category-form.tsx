@@ -64,7 +64,7 @@ interface AddCategoryFormProps {
 }
 
 // API Endpoint relative path for adding categories
-const ADD_CATEGORY_API_PATH = '/api/categories/add';
+const ADD_CATEGORY_API_PATH = '/categories/add'; // Updated path
 
 
 export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormProps) {
@@ -123,7 +123,7 @@ export default function AddCategoryForm({ onSuccess, onClose }: AddCategoryFormP
         const result = await response.json();
 
         if (!response.ok) {
-           let errorMsg = result.msg || `HTTP error! status: ${response.status}`;
+           let errorMsg = result.msg || result.error || `HTTP error! status: ${response.status}`;
             if (result.errors) {
                  errorMsg += ` Details: ${result.errors.join(', ')}`;
             }
