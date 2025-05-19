@@ -83,13 +83,18 @@ export const getAbsoluteUrl = (path: string): string => {
     if (path.startsWith('http')) {
         return path;
     }
-    // Ensure API_BASE_URL does not have a trailing slash and path does not have a leading slash
-    return `${API_BASE_URL.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+    // Ensure API_BASE_URL does not have a trailing slash and path includes a leading slash for clarity if it's an endpoint.
+    // If path starts with /api/, it's already specifying the full endpoint relative to base.
+    if (path.startsWith('/api/')) {
+        return `${API_BASE_URL.replace(/\/$/, '')}${path}`;
+    }
+    // Otherwise, assume it's a path relative to /api/
+    return `${API_BASE_URL.replace(/\/$/, '')}/api${path.startsWith('/') ? path : '/' + path}`;
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl('/tools/all'); // Updated path
+        const url = getAbsoluteUrl('/api/tools'); // Endpoint is /api/tools
         console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool[]> = await response.json();
@@ -108,7 +113,7 @@ export const getAllTools = async (): Promise<Tool[]> => {
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${slug}`); // Updated path (assuming :id is the slug)
+        const url = getAbsoluteUrl(`/api/tools/${slug}`); // Endpoint is /api/tools/:slug
         console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool> = await response.json();
@@ -128,7 +133,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories/all'); // Updated path
+        const url = getAbsoluteUrl('/api/categories'); // Endpoint is /api/categories
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Category[]> = await response.json();
@@ -147,7 +152,7 @@ export const getAllCategories = async (): Promise<Category[]> => {
 
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`); // Updated path
+        const url = getAbsoluteUrl(`/api/categories/${categorySlug}/tools`); // Endpoint is /api/categories/:categorySlug/tools
         console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Tool[]> = await response.json();
@@ -167,7 +172,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Updated path
+        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`); // Endpoint is /api/tools/:toolSlug/comments
         console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
@@ -192,7 +197,7 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
 
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Updated path
+        const url = getAbsoluteUrl(`/api/tools/${toolSlug}/comments`); // Endpoint is /api/tools/:toolSlug/comments
         console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Comment[]> = await response.json();
@@ -212,7 +217,7 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
 
 export const getAllComments = async (): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl('/comments'); // Updated path
+        const url = getAbsoluteUrl('/api/comments'); // Endpoint is /api/comments
         console.log(`Fetching all comments from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Comment[]> = await response.json();
@@ -231,7 +236,7 @@ export const getAllComments = async (): Promise<Comment[]> => {
 
 
 export const getIconComponent = (iconName: string): LucideIcon => {
-    return iconMap[iconName] || Zap; 
+    return iconMap[iconName] || Zap;
 };
 
 export const renderStars = (rating: number): React.ReactNode[] => {
@@ -273,22 +278,22 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
 
     const sameCategoryTools = otherTools
         .filter(t => t.categorySlug === currentTool.categorySlug)
-        .sort((a, b) => b.rating - a.rating); 
+        .sort((a, b) => b.rating - a.rating);
 
     let related = [...sameCategoryTools];
     if (related.length < 3) {
         const otherHighlyRatedTools = otherTools
-            .filter(t => t.categorySlug !== currentTool.categorySlug) 
+            .filter(t => t.categorySlug !== currentTool.categorySlug)
             .sort((a, b) => b.rating - a.rating);
         related = [...related, ...otherHighlyRatedTools].slice(0, 3);
     }
 
-    return related.slice(0, 3); 
+    return related.slice(0, 3);
 };
 
 export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl('/tools/add'); // Updated path
+        const url = getAbsoluteUrl('/api/tools/add'); // Endpoint is /api/tools/add
         console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
         const response = await fetch(url, {
             method: 'POST',
@@ -314,7 +319,7 @@ export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' 
 
 export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 'createdAt'>): Promise<Category | null> => {
     try {
-        const url = getAbsoluteUrl('/categories/add'); // Updated path
+        const url = getAbsoluteUrl('/api/categories/add'); // Endpoint is /api/categories/add
         console.log(`Adding category to backend via: ${url} with payload:`, categoryData);
         const response = await fetch(url, {
             method: 'POST',
