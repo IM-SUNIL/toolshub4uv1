@@ -18,7 +18,7 @@ import AddToolForm from '@/components/admin/add-tool-form';
 import AddCategoryForm from '@/components/admin/add-category-form';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAllTools as apiGetAllTools, getAllCategories as apiGetAllCategories, Tool as APITool, Category as APICategoryType } from '@/lib/data/tools';
+import { getAllTools as apiGetAllTools, getAllCategories as apiGetAllCategories, APITool, APICategoryType } from '@/lib/data/tools';
 import {
   Table,
   TableBody,
@@ -56,25 +56,24 @@ export default function AdminDashboardPage() {
     let toolsFetched = false;
 
     try {
-      const [categoriesData, toolsData] = await Promise.all([
-        apiGetAllCategories(),
-        apiGetAllTools()
-      ]);
-
+      // Fetch categories first for the dropdown
+      const categoriesData = await apiGetAllCategories();
       if (categoriesData) {
         const formattedCategories = categoriesData.map(cat => ({
           value: cat.slug,
           label: cat.name,
         }));
         setCategoriesForDropdown(formattedCategories);
-        setCategories(categoriesData);
+        setCategories(categoriesData); // Also set for the categories table
         categoriesFetched = true;
       } else {
         setCategoriesForDropdown([]);
         setCategories([]);
-        toast({ title: "Error", description: "Failed to load categories.", variant: "destructive" });
+        toast({ title: "Error", description: "Failed to load categories for dropdown.", variant: "destructive" });
       }
 
+      // Then fetch tools
+      const toolsData = await apiGetAllTools();
       if (toolsData) {
         setTools(toolsData);
         toolsFetched = true;
@@ -82,6 +81,7 @@ export default function AdminDashboardPage() {
         setTools([]);
         toast({ title: "Error", description: "Failed to load tools.", variant: "destructive" });
       }
+
 
       if (showToastFeedback && (categoriesFetched || toolsFetched)) {
         toast({ title: "Data Reloaded", description: "Tools and categories have been updated." });
@@ -136,8 +136,8 @@ export default function AdminDashboardPage() {
      );
   }
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
+  const truncateText = (text: string | undefined | null, maxLength: number) => {
+    if (!text || text.length <= maxLength) return text || '';
     return text.substring(0, maxLength) + '...';
   };
 
