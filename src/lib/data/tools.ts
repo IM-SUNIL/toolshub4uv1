@@ -140,7 +140,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories'); // Corrected to /categories as per backend route
+        const url = getAbsoluteUrl('/categories/all'); // Corrected to /categories as per backend route
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
 
