@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const Comment = require('../models/Comment'); // Adjust path to your Comment model
+const Comment = require('../models/Comment'); 
 router.get('/', async (req, res) => {
   try {
     // If using embedded comments, this route might not be directly useful unless you want to aggregate all comments.
