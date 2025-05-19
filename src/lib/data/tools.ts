@@ -78,16 +78,12 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && pro
         `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
     );
 } else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-     console.log(`API_BASE_URL is set to: ${API_BASE_URL} (fallback or hardcoded HTTPS)`);
+     console.log(`API_BASE_URL is set to: ${API_BASE_URL} (hardcoded HTTPS)`);
 }
 
 
 export const getAbsoluteUrl = (path: string): string => {
-    if (path.startsWith('https') || path.startsWith('http')) { // Check for full URLs
-        // If a full URL is passed, and it's http, force https for the known backend.
-        if (path.startsWith('http://toolshub4u-backend.onrender.com')) {
-            return path.replace('http://', 'https://');
-        }
+    if (path.startsWith('https') || path.startsWith('http')) {
         return path;
     }
     const base = API_BASE_URL.replace(/\/$/, '');
@@ -106,12 +102,12 @@ export const getAllTools = async (): Promise<Tool[]> => {
         if (!response.ok || !result.success) {
             const errorText = result.error || await response.text();
             console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)} Body: ${errorText}`);
-            return [];
+            return []; // Return empty array on explicit API error or non-success
         }
-        return result.data || [];
+        return result.data || []; // Ensure it returns an empty array if data is null
     } catch (error) {
         console.error("Network or other error in getAllTools:", error);
-        return [];
+        return []; // Return empty array on network errors or other exceptions
     }
 };
 
@@ -141,17 +137,12 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories/all'); // Corrected to /categories
+        const url = getAbsoluteUrl('/categories'); // Corrected endpoint
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
-            return [];
-        }
         const result: ApiResponse<Category[]> = await response.json();
-        if (!result.success) {
+
+        if (!response.ok || !result.success) {
             console.error(`API error fetching all categories: ${result.error}`);
             return [];
         }
@@ -369,4 +360,3 @@ export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 
 
 // Added for Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
-
