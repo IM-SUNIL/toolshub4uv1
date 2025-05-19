@@ -80,7 +80,7 @@ if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
 
 
 export const getAbsoluteUrl = (path: string): string => {
-    if (path.startsWith('http')) {
+    if (path.startsWith('https')) {
         return path;
     }
     const base = API_BASE_URL.replace(/\/$/, '');
