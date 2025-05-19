@@ -68,19 +68,26 @@ export const iconMap: { [key: string]: LucideIcon } = {
     // Add more mappings as needed for tool steps or other icons
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "https://toolshub4u-backend.onrender.com/api";
+// Force HTTPS for the API base URL to prevent mixed content errors
+const API_BASE_URL = "https://toolshub4u-backend.onrender.com/api";
 
-// Log warning only once, ideally on module load, and only on client-side if relevant for client logic
-if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
+// Log warning if NEXT_PUBLIC_API_BASE_URL was set but is being overridden
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== API_BASE_URL) {
     console.warn(
         '\x1b[33m%s\x1b[0m', // Yellow text
-        'Warning: NEXT_PUBLIC_API_BASE_URL environment variable is not set in .env file. Falling back to default https://toolshub4u-backend.onrender.com/api'
+        `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
     );
+} else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
+     console.log(`API_BASE_URL is set to: ${API_BASE_URL} (fallback or hardcoded HTTPS)`);
 }
 
 
 export const getAbsoluteUrl = (path: string): string => {
-    if (path.startsWith('https')) {
+    if (path.startsWith('https') || path.startsWith('http')) { // Check for full URLs
+        // If a full URL is passed, and it's http, force https for the known backend.
+        if (path.startsWith('http://toolshub4u-backend.onrender.com')) {
+            return path.replace('http://', 'https://');
+        }
         return path;
     }
     const base = API_BASE_URL.replace(/\/$/, '');
@@ -90,22 +97,16 @@ export const getAbsoluteUrl = (path: string): string => {
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl('/tools/all'); // Ensure this uses /tools/all
-        console.log(`Fetching all tools from: ${url}`);
+        // This will construct https://toolshub4u-backend.onrender.com/api/tools/all
+        const url = getAbsoluteUrl('/tools/all');
+        console.log(`Fetching all tools from: ${url}`); // For debugging
         const response = await fetch(url);
-        
-        if (!response.ok) { // Check response.ok first
-            const errorBody = await response.text();
-            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
-            // Do not throw here, return empty array to let UI handle "no data"
-            return [];
-        }
-
         const result: ApiResponse<Tool[]> = await response.json();
 
-        if (!result.success) {
-            console.error(`Error fetching all tools. API indicated failure. URL: ${url}, Response: ${JSON.stringify(result)}`);
-            return []; // Return empty array on explicit API non-success
+        if (!response.ok || !result.success) {
+            const errorText = result.error || await response.text();
+            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)} Body: ${errorText}`);
+            return [];
         }
         return result.data || [];
     } catch (error) {
@@ -116,10 +117,10 @@ export const getAllTools = async (): Promise<Tool[]> => {
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${slug}`); 
+        const url = getAbsoluteUrl(`/tools/${slug}`);
         console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
-        
+
         if (!response.ok) {
              if (response.status === 404) return null;
              const errorBody = await response.text();
@@ -140,7 +141,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories/all'); // Corrected to /categories as per backend route
+        const url = getAbsoluteUrl('/categories'); // Corrected to /categories
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
 
@@ -168,7 +169,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
         const response = await fetch(url);
 
         if (!response.ok) {
-            if (response.status === 404) return []; // If category not found, return empty tools
+            if (response.status === 404) return [];
             const errorBody = await response.text();
             console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
             return [];
@@ -187,7 +188,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); 
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
         console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
@@ -212,7 +213,7 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
 
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); 
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
         console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
 
@@ -236,7 +237,7 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
 
 export const getAllComments = async (): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl('/comments'); 
+        const url = getAbsoluteUrl('/comments');
         console.log(`Fetching all comments from: ${url}`);
         const response = await fetch(url);
 
@@ -316,7 +317,7 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
 
 export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl('/tools/add'); 
+        const url = getAbsoluteUrl('/tools/add');
         console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
         const response = await fetch(url, {
             method: 'POST',
@@ -368,3 +369,4 @@ export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 
 
 // Added for Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
+
