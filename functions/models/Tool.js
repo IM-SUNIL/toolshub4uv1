@@ -57,8 +57,8 @@ const ToolSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Website link is required.'],
     trim: true,
-    // Basic URL validation example (consider a more robust library if needed)
-    match: [/^https?:\/\/.+/, 'Please enter a valid URL starting with http:// or https://']
+    // Enforce HTTPS for website links
+    match: [/^https:\/\/.+/, 'Please enter a valid URL starting with https://']
   },
   tags: [
     {
