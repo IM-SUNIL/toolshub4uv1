@@ -83,56 +83,53 @@ export const getAbsoluteUrl = (path: string): string => {
     if (path.startsWith('http')) {
         return path;
     }
-    // API_BASE_URL already includes /api, so we just need to append the specific path.
-    // Ensure API_BASE_URL doesn't have a trailing slash and path has a leading slash.
     const base = API_BASE_URL.replace(/\/$/, '');
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-
-    // If base URL is https://toolshub4u-backend.onrender.com/api
-    // and path is /tools/all, then final URL should be https://toolshub4u-backend.onrender.com/api/tools/all
-    // If base URL is https://toolshub4u-backend.onrender.com (without /api)
-    // and path is /api/tools/all, then final URL is https://toolshub4u-backend.onrender.com/api/tools/all
-    // The current logic assumes API_BASE_URL contains /api
-    // For /tools/all, the path passed to getAbsoluteUrl should be /tools/all
-    // and it will be appended to API_BASE_URL.
-
-    // If API_BASE_URL = "https://toolshub4u-backend.onrender.com/api"
-    // and path = "/tools/all"
-    // result: "https://toolshub4u-backend.onrender.com/api/tools/all"
     return `${base}${normalizedPath}`;
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl('/tools/all'); // Updated endpoint
-        console.log(`Fetching all tools from: ${url}`); // Log the URL being fetched
+        const url = getAbsoluteUrl('/tools/all'); // Ensure this uses /tools/all
+        console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
+        
+        if (!response.ok) { // Check response.ok first
+            const errorBody = await response.text();
+            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            // Do not throw here, return empty array to let UI handle "no data"
+            return [];
+        }
+
         const result: ApiResponse<Tool[]> = await response.json();
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text(); // Get more details on the error
-            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)} Body: ${errorText}`);
-            throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Response: ${errorText}`);
+        if (!result.success) {
+            console.error(`Error fetching all tools. API indicated failure. URL: ${url}, Response: ${JSON.stringify(result)}`);
+            return []; // Return empty array on explicit API non-success
         }
         return result.data || [];
     } catch (error) {
-        console.error("Error in getAllTools:", error);
+        console.error("Network or other error in getAllTools:", error);
         return [];
     }
 };
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${slug}`); // Assuming backend route is /api/tools/:slug
+        const url = getAbsoluteUrl(`/tools/${slug}`); 
         console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Tool> = await response.json();
-
+        
         if (!response.ok) {
              if (response.status === 404) return null;
-             const errorText = result.error || await response.text();
-             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-             throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
+             const errorBody = await response.text();
+             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+             throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Body: ${errorBody}`);
+        }
+        const result: ApiResponse<Tool> = await response.json();
+        if (!result.success) {
+            console.error(`API error fetching tool ${slug}: ${result.error}`);
+            return null;
         }
         return result.data;
     } catch (error) {
@@ -143,15 +140,19 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories'); // Corrected endpoint based on Express routes
+        const url = getAbsoluteUrl('/categories'); // Corrected to /categories as per backend route
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Category[]> = await response.json();
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Error fetching all categories. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        const result: ApiResponse<Category[]> = await response.json();
+        if (!result.success) {
+            console.error(`API error fetching all categories: ${result.error}`);
+            return [];
         }
         return result.data || [];
     } catch (error) {
@@ -162,16 +163,20 @@ export const getAllCategories = async (): Promise<Category[]> => {
 
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
     try {
-        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`); // Assuming backend route is /api/categories/:categorySlug/tools
+        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`);
         console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Tool[]> = await response.json();
 
         if (!response.ok) {
-            if (response.status === 404 && !result.success) return [];
-            const errorText = result.error || await response.text();
-            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
+            if (response.status === 404) return []; // If category not found, return empty tools
+            const errorBody = await response.text();
+            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        const result: ApiResponse<Tool[]> = await response.json();
+        if (!result.success) {
+            console.error(`API error fetching tools for category ${categorySlug}: ${result.error}`);
+            return [];
         }
         return result.data || [];
     } catch (error) {
@@ -182,7 +187,7 @@ export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Assuming backend route is /api/tools/:toolSlug/comments
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); 
         console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
@@ -207,16 +212,20 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
 
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); // Assuming backend route is /api/tools/:toolSlug/comments
+        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`); 
         console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Comment[]> = await response.json();
 
         if (!response.ok) {
-            if (response.status === 404 && !result.success) return [];
-            const errorText = result.error || await response.text();
-            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
+            if (response.status === 404) return [];
+            const errorBody = await response.text();
+            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        const result: ApiResponse<Comment[]> = await response.json();
+         if (!result.success) {
+            console.error(`API error fetching comments for ${toolSlug}: ${result.error}`);
+            return [];
         }
         return result.data || [];
     } catch (error) {
@@ -227,15 +236,19 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
 
 export const getAllComments = async (): Promise<Comment[]> => {
     try {
-        const url = getAbsoluteUrl('/comments'); // Assuming backend route is /api/comments
+        const url = getAbsoluteUrl('/comments'); 
         console.log(`Fetching all comments from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Comment[]> = await response.json();
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status} fetching ${url}. Body: ${errorText}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        const result: ApiResponse<Comment[]> = await response.json();
+        if (!result.success) {
+            console.error(`API error fetching all comments: ${result.error}`);
+            return [];
         }
         return result.data || [];
     } catch (error) {
@@ -303,7 +316,7 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
 
 export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
     try {
-        const url = getAbsoluteUrl('/tools/add'); // Assuming backend route is /api/tools/add
+        const url = getAbsoluteUrl('/tools/add'); 
         console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
         const response = await fetch(url, {
             method: 'POST',
@@ -329,7 +342,7 @@ export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' 
 
 export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 'createdAt'>): Promise<Category | null> => {
     try {
-        const url = getAbsoluteUrl('/categories/add'); // Assuming backend route is /api/categories/add
+        const url = getAbsoluteUrl('/categories/add');
         console.log(`Adding category to backend via: ${url} with payload:`, categoryData);
         const response = await fetch(url, {
             method: 'POST',
@@ -353,7 +366,5 @@ export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 
     }
 };
 
-// Added for Admin Dashboard types
+// Added for Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
-
-    
