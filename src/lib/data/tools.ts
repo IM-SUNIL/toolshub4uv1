@@ -43,11 +43,16 @@ export interface Category {
   createdAt: string | Date;
 }
 
-// API Response Structure
+// API Response Structure for most endpoints
 interface ApiResponse<T> {
     success: boolean;
     data: T | null;
     error: string | null;
+}
+
+// Specific response structure for /api/categories/all if it's { categories: [...] }
+interface CategoriesAllResponse {
+    categories: Category[];
 }
 
 
@@ -68,29 +73,28 @@ export const iconMap: { [key: string]: LucideIcon } = {
     // Add more mappings as needed for tool steps or other icons
 };
 
-// Force HTTPS for the API base URL
+// Ensure API_BASE_URL is HTTPS
 const API_BASE_URL = "https://toolshub4u-backend.onrender.com/api";
 
 
 export const getAbsoluteUrl = (path: string): string => {
-    if (path.startsWith('https://') || path.startsWith('http://')) { // Check for full URLs
+    if (path.startsWith('https://') || path.startsWith('http://')) {
         return path;
     }
-    // Ensure API_BASE_URL does not have a trailing slash and path starts with a slash
     const base = API_BASE_URL.replace(/\/$/, '');
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${base}${normalizedPath}`;
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
-    const url = getAbsoluteUrl('/tools/all');
-    console.log(`Fetching all tools from: ${url}`);
     try {
+        const url = getAbsoluteUrl('/tools/all');
+        console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
 
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error(`HTTP error fetching tools. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            console.error(`HTTP error fetching all tools. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
             return [];
         }
 
@@ -101,13 +105,33 @@ export const getAllTools = async (): Promise<Tool[]> => {
             return [];
         }
         
-        const result: ApiResponse<Tool[]> = await response.json();
+        const result: ApiResponse<Tool[]> | { tools: Tool[] } | Tool[] = await response.json();
 
-        if (!result.success) {
-            console.error(`API error fetching all tools: ${result.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(result)}`);
+        // Check for standard API response structure first
+        if (typeof result === 'object' && result !== null && 'success' in result && 'data' in result) {
+            const apiResult = result as ApiResponse<Tool[]>;
+            if (!apiResult.success) {
+                console.error(`API error fetching all tools (standard structure): ${apiResult.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(apiResult)}`);
+                return [];
+            }
+            return apiResult.data || [];
+        } 
+        // Check if the response is an object with a 'tools' key
+        else if (typeof result === 'object' && result !== null && 'tools' in result && Array.isArray((result as { tools: Tool[] }).tools)) {
+            console.warn(`Received non-standard 'tools' array structure from ${url}. Adapting.`);
+            return (result as { tools: Tool[] }).tools;
+        }
+        // Check if the response is a direct array of tools
+        else if (Array.isArray(result)) {
+            console.warn(`Received direct array structure for tools from ${url}. Adapting.`);
+            return result as Tool[];
+        }
+        // If none of the above, it's an unexpected structure
+        else {
+            console.error(`Unexpected JSON structure received for tools from ${url}. Full Response: ${JSON.stringify(result)}`);
             return [];
         }
-        return result.data || [];
+
     } catch (error: any) { 
         console.error(`Network or JSON parsing error in getAllTools for ${url}:`, error);
         return [];
@@ -115,7 +139,7 @@ export const getAllTools = async (): Promise<Tool[]> => {
 };
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
-    const url = getAbsoluteUrl(`/tools/${slug}`);
+    const url = getAbsoluteUrl(`/tools/${slug}`); // Assuming backend uses slug
     console.log(`Fetching tool by slug from: ${url}`);
     try {
         const response = await fetch(url);
@@ -147,17 +171,17 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 };
 
 export const getAllCategories = async (): Promise<Category[]> => {
-    const url = getAbsoluteUrl('/categories/all'); 
-    console.log(`Fetching all categories from: ${url}`);
     try {
+        const url = getAbsoluteUrl('/categories/all'); // Ensure this matches the endpoint that returns { categories: [...] }
+        console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
 
         if (!response.ok) {
-            const errorBody = await response.text(); 
-            console.error(`HTTP error fetching categories. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            const errorBody = await response.text();
+            console.error(`HTTP error fetching all categories. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
             return [];
         }
-        
+
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const errorBody = await response.text();
@@ -165,13 +189,32 @@ export const getAllCategories = async (): Promise<Category[]> => {
             return [];
         }
         
-        const result: ApiResponse<Category[]> = await response.json();
+        const result = await response.json();
 
-        if (!result.success) {
-            console.error(`API error fetching all categories: ${result.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(result)}`);
+        // Handle { categories: [...] } structure
+        if (typeof result === 'object' && result !== null && Array.isArray(result.categories)) {
+            return result.categories as Category[];
+        }
+        // Handle standard { success: boolean, data: Category[] | null, ... } structure
+        else if (typeof result === 'object' && result !== null && 'success' in result) {
+            const apiResult = result as ApiResponse<Category[]>;
+            if (!apiResult.success) {
+                 console.error(`API error fetching all categories (standard structure): ${apiResult.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(apiResult)}`);
+                 return [];
+            }
+            return apiResult.data || [];
+        }
+         // Handle direct array [...] structure (less likely for /categories/all but good fallback)
+        else if (Array.isArray(result)) {
+             console.warn(`Received direct array structure for categories from ${url}. Adapting.`);
+             return result as Category[];
+        }
+        // If none of the above, it's an unexpected structure
+        else {
+            console.error(`Unexpected JSON structure for categories from ${url}. Full Response: ${JSON.stringify(result)}`);
             return [];
         }
-        return result.data || [];
+
     } catch (error: any) { 
         console.error(`Network or JSON parsing error in getAllCategories for ${url}:`, error);
         return [];
@@ -241,7 +284,7 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
         }
 
         if (!contentType || !contentType.includes('application/json')) {
-            const responseBody = await response.text(); // Safe to read text now
+            const responseBody = await response.text(); 
             console.error(`Expected JSON response after adding comment, but received ${contentType}. URL: ${url}, Body: ${responseBody}`);
             throw new Error(`Unexpected response format from server after adding comment.`);
         }
@@ -294,9 +337,8 @@ export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> =
     }
 };
 
-// getAllComments is not directly used by the main UI pages but could be for an admin/overview
 export const getAllComments = async (): Promise<Comment[]> => {
-    const url = getAbsoluteUrl('/comments'); // Assuming a general comments endpoint
+    const url = getAbsoluteUrl('/comments'); 
     console.log(`Fetching all comments from: ${url}`);
     try {
         const response = await fetch(url);
@@ -325,7 +367,12 @@ export const getAllComments = async (): Promise<Comment[]> => {
 
 
 export const getIconComponent = (iconName: string): LucideIcon => {
-    return iconMap[iconName] || Zap; // Fallback to Zap icon if not found
+    const Icon = iconMap[iconName];
+    if (!Icon) {
+        console.warn(`Icon "${iconName}" not found in iconMap. Falling back to Zap.`);
+        return Zap; // Fallback to Zap icon if not found
+    }
+    return Icon;
 };
 
 
@@ -353,34 +400,29 @@ export const renderStars = (rating: number): React.ReactNode[] => {
 
 export const getFeaturedTools = async (): Promise<Tool[]> => {
     const allTools = await getAllTools();
-    // Sort by rating (descending) then by creation date (descending)
     return allTools
         .sort((a, b) => {
             if (b.rating !== a.rating) {
-                return b.rating - a.rating; // Higher rating first
+                return b.rating - a.rating;
             }
-            // If ratings are equal, sort by newest first
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
-            return dateB - dateA; // Newer date first
+            return dateB - dateA;
         })
-        .slice(0, 6); // Get top 6
+        .slice(0, 6);
 };
 
 
 export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
     const allTools = await getAllTools();
-    // Filter out the current tool
     const otherTools = allTools.filter(t => t.slug !== currentTool.slug);
 
-    // Prioritize tools from the same category, sorted by rating
     const sameCategoryTools = otherTools
         .filter(t => t.categorySlug === currentTool.categorySlug)
-        .sort((a, b) => b.rating - a.rating); // Higher rating first
+        .sort((a, b) => b.rating - a.rating); 
 
     let related = [...sameCategoryTools];
 
-    // If not enough related tools from the same category, add highly rated tools from other categories
     if (related.length < 3) {
         const otherHighlyRatedTools = otherTools
             .filter(t => t.categorySlug !== currentTool.categorySlug) 
@@ -393,11 +435,9 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
             }
         }
     }
-
     return related.slice(0, 3); 
 };
 
-// For Admin Dashboard data fetching, to be called from client components
 export const apiGetAllTools = async (): Promise<Tool[]> => {
     return getAllTools(); 
 };
@@ -406,7 +446,4 @@ export const apiGetAllCategories = async (): Promise<Category[]> => {
     return getAllCategories(); 
 };
 
-// For Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
-
-    
