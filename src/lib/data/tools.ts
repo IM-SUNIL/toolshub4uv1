@@ -71,18 +71,9 @@ export const iconMap: { [key: string]: LucideIcon } = {
 // Force HTTPS for the API base URL
 const API_BASE_URL = "https://toolshub4u-backend.onrender.com/api";
 
-// if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== API_BASE_URL) {
-//     console.warn(
-//         '\x1b[33m%s\x1b[0m',
-//         `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
-//     );
-// } else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-//      console.log(`API_BASE_URL is set to: ${API_BASE_URL} (hardcoded HTTPS)`);
-// }
-
 
 export const getAbsoluteUrl = (path: string): string => {
-    if (path.startsWith('https') || path.startsWith('http')) {
+    if (path.startsWith('https://') || path.startsWith('http://')) { // Check for full URLs
         return path;
     }
     // Ensure API_BASE_URL does not have a trailing slash and path starts with a slash
@@ -92,95 +83,137 @@ export const getAbsoluteUrl = (path: string): string => {
 };
 
 export const getAllTools = async (): Promise<Tool[]> => {
+    const url = getAbsoluteUrl('/tools/all');
+    console.log(`Fetching all tools from: ${url}`);
     try {
-        const url = getAbsoluteUrl('/tools/all');
-        console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Tool[]> = await response.json(); // FIRST READ
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || JSON.stringify(result); // Use result, not response.text()
-            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response details: ${errorText}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`HTTP error fetching tools. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} when fetching all tools. URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        
+        const result: ApiResponse<Tool[]> = await response.json();
+
+        if (!result.success) {
+            console.error(`API error fetching all tools: ${result.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(result)}`);
             return [];
         }
         return result.data || [];
-    } catch (error) {
-        console.error("Network or other error in getAllTools:", error);
+    } catch (error: any) { 
+        console.error(`Network or JSON parsing error in getAllTools for ${url}:`, error);
         return [];
     }
 };
 
 export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
+    const url = getAbsoluteUrl(`/tools/${slug}`);
+    console.log(`Fetching tool by slug from: ${url}`);
     try {
-        const url = getAbsoluteUrl(`/tools/${slug}`);
-        console.log(`Fetching tool by slug from: ${url}`);
         const response = await fetch(url);
 
         if (!response.ok) {
-             if (response.status === 404) return null;
-             const errorBody = await response.text();
-             console.error(`Error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
-             throw new Error(`HTTP error! status: ${response.status} fetching ${url}. Body: ${errorBody}`);
+            const errorBody = await response.text();
+            console.error(`HTTP error fetching tool ${slug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            if (response.status === 404) return null;
+            return null;
         }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} for tool ${slug}. URL: ${url}, Body: ${errorBody}`);
+            return null;
+        }
+
         const result: ApiResponse<Tool> = await response.json();
         if (!result.success) {
-            console.error(`API error fetching tool ${slug}: ${result.error}`);
+            console.error(`API error fetching tool ${slug}: ${result.error || 'Unknown API error'}. Full Response: ${JSON.stringify(result)}`);
             return null;
         }
         return result.data;
-    } catch (error) {
-        console.error(`Error in getToolBySlug for ${slug}:`, error);
+    } catch (error: any) {
+        console.error(`Network or unexpected error in getToolBySlug for ${slug} (${url}):`, error);
         return null;
     }
 };
 
 export const getAllCategories = async (): Promise<Category[]> => {
+    const url = getAbsoluteUrl('/categories'); 
+    console.log(`Fetching all categories from: ${url}`);
     try {
-        const url = getAbsoluteUrl('/categories'); // Corrected endpoint
-        console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Category[]> = await response.json(); // First read
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || JSON.stringify(result); // Use result, not trying to re-read response
-            console.error(`API error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
+        if (!response.ok) {
+            const errorBody = await response.text(); 
+            console.error(`HTTP error fetching categories. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} when fetching all categories. URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        
+        const result: ApiResponse<Category[]> = await response.json();
+
+        if (!result.success) {
+            console.error(`API error fetching all categories: ${result.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(result)}`);
             return [];
         }
         return result.data || [];
-    } catch (error) {
-        console.error("Error in getAllCategories:", error);
+    } catch (error: any) { 
+        console.error(`Network or JSON parsing error in getAllCategories for ${url}:`, error);
         return [];
     }
 };
 
 export const getToolsByCategorySlug = async (categorySlug: string): Promise<Tool[]> => {
+    const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`);
+    console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
     try {
-        const url = getAbsoluteUrl(`/categories/${categorySlug}/tools`);
-        console.log(`Fetching tools for category ${categorySlug} from: ${url}`);
         const response = await fetch(url);
 
         if (!response.ok) {
-            if (response.status === 404) return [];
             const errorBody = await response.text();
-            console.error(`Error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            console.error(`HTTP error fetching tools for category ${categorySlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            if (response.status === 404) return [];
             return [];
         }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} for category ${categorySlug} tools. URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+
         const result: ApiResponse<Tool[]> = await response.json();
         if (!result.success) {
-            console.error(`API error fetching tools for category ${categorySlug}: ${result.error}`);
+            console.error(`API error fetching tools for category ${categorySlug}: ${result.error || 'Unknown API error'}. Full Response: ${JSON.stringify(result)}`);
             return [];
         }
         return result.data || [];
-    } catch (error) {
-        console.error(`Error in getToolsByCategorySlug for ${categorySlug}:`, error);
+    } catch (error: any) {
+        console.error(`Network or unexpected error in getToolsByCategorySlug for ${categorySlug} (${url}):`, error);
         return [];
     }
 };
 
 export const addCommentToTool = async (toolSlug: string, name: string, comment: string): Promise<Comment | null> => {
+    const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
+    console.log(`Adding comment to ${toolSlug} via: ${url}`);
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
-        console.log(`Adding comment to ${toolSlug} via: ${url}`);
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -188,63 +221,104 @@ export const addCommentToTool = async (toolSlug: string, name: string, comment: 
             },
             body: JSON.stringify({ name, comment }),
         });
+
+        const contentType = response.headers.get('content-type');
+        
+        if (!response.ok) {
+            let errorDetail = `HTTP ${response.status} ${response.statusText}`;
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorResult: ApiResponse<any> = await response.json();
+                    errorDetail = errorResult.error || JSON.stringify(errorResult);
+                } catch (e) { /* ignore if parsing error response body fails */ }
+            } else {
+                try {
+                    errorDetail = await response.text();
+                } catch (e) { /* ignore if parsing error response body fails */ }
+            }
+            console.error(`Error adding comment. Status: ${response.status}, URL: ${url}, Details: ${errorDetail}`);
+            throw new Error(`Failed to add comment: ${errorDetail}`);
+        }
+
+        if (!contentType || !contentType.includes('application/json')) {
+            const responseBody = await response.text(); // Safe to read text now
+            console.error(`Expected JSON response after adding comment, but received ${contentType}. URL: ${url}, Body: ${responseBody}`);
+            throw new Error(`Unexpected response format from server after adding comment.`);
+        }
+
         const result: ApiResponse<Comment> = await response.json();
 
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error adding comment. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(result.error || `HTTP error! status: ${response.status}. Body: ${errorText}`);
+        if (!result.success) {
+            console.error(`API error adding comment (success:false): ${result.error || 'Unknown API error'}. URL: ${url}, Full Response: ${JSON.stringify(result)}`);
+            throw new Error(result.error || `API reported failure adding comment.`);
         }
+        
         return result.data;
-    } catch (error) {
-        console.error(`Error in addCommentToTool for ${toolSlug}:`, error);
-        return null;
+
+    } catch (error: any) {
+        console.error(`Network or unexpected error in addCommentToTool for ${toolSlug} (${url}):`, error);
+        throw error; 
     }
 };
 
+
 export const getCommentsForTool = async (toolSlug: string): Promise<Comment[]> => {
+    const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
+    console.log(`Fetching comments for ${toolSlug} from: ${url}`);
     try {
-        const url = getAbsoluteUrl(`/tools/${toolSlug}/comments`);
-        console.log(`Fetching comments for ${toolSlug} from: ${url}`);
         const response = await fetch(url);
 
         if (!response.ok) {
-            if (response.status === 404) return [];
             const errorBody = await response.text();
-            console.error(`Error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            console.error(`HTTP error fetching comments for ${toolSlug}. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            if (response.status === 404) return [];
             return [];
         }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} for comments of ${toolSlug}. URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        
         const result: ApiResponse<Comment[]> = await response.json();
          if (!result.success) {
-            console.error(`API error fetching comments for ${toolSlug}: ${result.error}`);
+            console.error(`API error fetching comments for ${toolSlug}: ${result.error || 'Unknown API error'}. Full Response: ${JSON.stringify(result)}`);
             return [];
         }
         return result.data || [];
-    } catch (error) {
-        console.error(`Error in getCommentsForTool for ${toolSlug}:`, error);
+    } catch (error: any) {
+        console.error(`Network or unexpected error in getCommentsForTool for ${toolSlug} (${url}):`, error);
         return [];
     }
 };
 
+// getAllComments is not directly used by the main UI pages but could be for an admin/overview
 export const getAllComments = async (): Promise<Comment[]> => {
+    const url = getAbsoluteUrl('/comments'); // Assuming a general comments endpoint
+    console.log(`Fetching all comments from: ${url}`);
     try {
-        const url = getAbsoluteUrl('/comments');
-        console.log(`Fetching all comments from: ${url}`);
         const response = await fetch(url);
-
         if (!response.ok) {
             const errorBody = await response.text();
-            console.error(`Error fetching all comments. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            console.error(`HTTP error fetching all comments. Status: ${response.status}, URL: ${url}, Body: ${errorBody}`);
+            return [];
+        }
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const errorBody = await response.text();
+            console.error(`Expected JSON, but received ${contentType} when fetching all comments. URL: ${url}, Body: ${errorBody}`);
             return [];
         }
         const result: ApiResponse<Comment[]> = await response.json();
         if (!result.success) {
-            console.error(`API error fetching all comments: ${result.error}`);
+            console.error(`API error fetching all comments: ${result.error || 'Unknown API error'}. Full Response: ${JSON.stringify(result)}`);
             return [];
         }
         return result.data || [];
-    } catch (error) {
-        console.error("Error in getAllComments:", error);
+    } catch (error: any) {
+        console.error(`Network or unexpected error in getAllComments for ${url}:`, error);
         return [];
     }
 };
@@ -309,10 +383,9 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
     // If not enough related tools from the same category, add highly rated tools from other categories
     if (related.length < 3) {
         const otherHighlyRatedTools = otherTools
-            .filter(t => t.categorySlug !== currentTool.categorySlug) // Exclude tools from current category (already considered)
-            .sort((a, b) => b.rating - a.rating); // Higher rating first
+            .filter(t => t.categorySlug !== currentTool.categorySlug) 
+            .sort((a, b) => b.rating - a.rating); 
 
-        // Add tools from other categories until we have 3 related tools, avoiding duplicates
         for (const tool of otherHighlyRatedTools) {
             if (related.length >= 3) break;
             if (!related.find(rt => rt.slug === tool.slug)) {
@@ -321,16 +394,16 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
         }
     }
 
-    return related.slice(0, 3); // Return up to 3 related tools
+    return related.slice(0, 3); 
 };
 
 // For Admin Dashboard data fetching, to be called from client components
 export const apiGetAllTools = async (): Promise<Tool[]> => {
-    return getAllTools(); // Reuses the existing logic
+    return getAllTools(); 
 };
 
 export const apiGetAllCategories = async (): Promise<Category[]> => {
-    return getAllCategories(); // Reuses the existing logic
+    return getAllCategories(); 
 };
 
 // For Admin Dashboard types - using specific names for clarity
