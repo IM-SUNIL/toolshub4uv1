@@ -61,7 +61,7 @@ interface AddToolFormProps {
 }
 
 // API Endpoint relative path for adding tools
-const ADD_TOOL_API_PATH = '/tools/add'; // Updated path
+const ADD_TOOL_API_PATH = '/tools/add';
 
 
 export default function AddToolForm({ categories, onSuccess, onClose }: AddToolFormProps) {
@@ -110,7 +110,7 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         summary: data.shortDescription,
         description: data.fullDescription,
         usageSteps: data.usageSteps?.split('\n').filter(step => step.trim() !== '').map(step => ({ text: step.trim() })) || [],
-        websiteLink: data.websiteLink,
+        url: data.websiteLink, // Changed from websiteLink to url
         tags: data.tags?.split(',').map(tag => tag.trim()).filter(tag => tag !== '') || [],
         // Comments, relatedToolIds, createdAt, updatedAt will be handled by backend/DB defaults
     };
@@ -133,9 +133,11 @@ export default function AddToolForm({ categories, onSuccess, onClose }: AddToolF
         if (!response.ok) {
             // Handle specific error messages from the backend
             let errorMsg = result.msg || result.error || `HTTP error! status: ${response.status}`;
-            if (result.errors) {
+            if (result.errors && Array.isArray(result.errors)) { // Ensure result.errors is an array
                  // Append validation errors if they exist
                  errorMsg += ` Details: ${result.errors.join(', ')}`;
+            } else if (result.errors && typeof result.errors === 'object') { // Handle object-based errors
+                errorMsg += ` Details: ${Object.values(result.errors).map((e: any) => e.message || e).join(', ')}`;
             }
             throw new Error(errorMsg);
         }
