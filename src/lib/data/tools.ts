@@ -68,13 +68,12 @@ export const iconMap: { [key: string]: LucideIcon } = {
     // Add more mappings as needed for tool steps or other icons
 };
 
-// Force HTTPS for the API base URL to prevent mixed content errors
+// Force HTTPS for the API base URL
 const API_BASE_URL = "https://toolshub4u-backend.onrender.com/api";
 
-// Log warning if NEXT_PUBLIC_API_BASE_URL was set but is being overridden
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== API_BASE_URL) {
     console.warn(
-        '\x1b[33m%s\x1b[0m', // Yellow text
+        '\x1b[33m%s\x1b[0m',
         `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
     );
 } else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
@@ -86,6 +85,7 @@ export const getAbsoluteUrl = (path: string): string => {
     if (path.startsWith('https') || path.startsWith('http')) {
         return path;
     }
+    // Ensure API_BASE_URL does not have a trailing slash and path starts with a slash
     const base = API_BASE_URL.replace(/\/$/, '');
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     return `${base}${normalizedPath}`;
@@ -143,7 +143,8 @@ export const getAllCategories = async (): Promise<Category[]> => {
         const result: ApiResponse<Category[]> = await response.json();
 
         if (!response.ok || !result.success) {
-            console.error(`API error fetching all categories: ${result.error}`);
+            const errorText = result.error || (response.headers.get('content-type')?.includes('application/json') ? JSON.stringify(await response.json()) : await response.text());
+            console.error(`API error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
             return [];
         }
         return result.data || [];
@@ -256,107 +257,82 @@ export const getIconComponent = (iconName: string): LucideIcon => {
 
 export const renderStars = (rating: number): React.ReactNode[] => {
     const fullStars = Math.floor(rating);
-    const halfStar = rating % 1 >= 0.5;
-    const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
-    const stars: React.ReactNode[] = [];
+    const halfStarPresent = rating % 1 >= 0.5;
+    const emptyStars = 5 - fullStars - (halfStarPresent ? 1 : 0);
+    const starsArray: React.ReactNode[] = [];
+
+    const StarIcon = getIconComponent('Star'); // Use getIconComponent
+    const StarHalfIcon = getIconComponent('StarHalf'); // Use getIconComponent
 
     for (let i = 0; i < fullStars; i++) {
-        stars.push(React.createElement(Star, { key: `full-${i}`, className: "h-5 w-5 fill-yellow-400 text-yellow-400" }));
+        starsArray.push(React.createElement(StarIcon, { key: `full-${i}`, className: "h-5 w-5 fill-yellow-400 text-yellow-400" }));
     }
-    if (halfStar) {
-        stars.push(React.createElement(StarHalf, { key: "half", className: "h-5 w-5 fill-yellow-400 text-yellow-400" }));
+    if (halfStarPresent) {
+        starsArray.push(React.createElement(StarHalfIcon, { key: "half", className: "h-5 w-5 fill-yellow-400 text-yellow-400" }));
     }
     for (let i = 0; i < emptyStars; i++) {
-        stars.push(React.createElement(Star, { key: `empty-${i}`, className: "h-5 w-5 text-muted-foreground" }));
+        starsArray.push(React.createElement(StarIcon, { key: `empty-${i}`, className: "h-5 w-5 text-muted-foreground" }));
     }
-    return stars;
+    return starsArray;
 };
+
 
 export const getFeaturedTools = async (): Promise<Tool[]> => {
     const allTools = await getAllTools();
+    // Sort by rating (descending) then by creation date (descending)
     return allTools
         .sort((a, b) => {
             if (b.rating !== a.rating) {
-                return b.rating - a.rating;
+                return b.rating - a.rating; // Higher rating first
             }
+            // If ratings are equal, sort by newest first
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
-            return dateB - dateA;
+            return dateB - dateA; // Newer date first
         })
-        .slice(0, 6);
+        .slice(0, 6); // Get top 6
 };
 
 
 export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
     const allTools = await getAllTools();
+    // Filter out the current tool
     const otherTools = allTools.filter(t => t.slug !== currentTool.slug);
 
+    // Prioritize tools from the same category, sorted by rating
     const sameCategoryTools = otherTools
         .filter(t => t.categorySlug === currentTool.categorySlug)
-        .sort((a, b) => b.rating - a.rating);
+        .sort((a, b) => b.rating - a.rating); // Higher rating first
 
     let related = [...sameCategoryTools];
+
+    // If not enough related tools from the same category, add highly rated tools from other categories
     if (related.length < 3) {
         const otherHighlyRatedTools = otherTools
-            .filter(t => t.categorySlug !== currentTool.categorySlug)
-            .sort((a, b) => b.rating - a.rating);
-        related = [...related, ...otherHighlyRatedTools].slice(0, 3);
-    }
-
-    return related.slice(0, 3);
-};
-
-export const addToolToBackend = async (toolData: Omit<Tool, '_id' | 'createdAt' | 'updatedAt' | 'comments'>): Promise<Tool | null> => {
-    try {
-        const url = getAbsoluteUrl('/tools/add');
-        console.log(`Adding tool to backend via: ${url} with payload:`, toolData);
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(toolData),
-        });
-        const result: ApiResponse<Tool> = await response.json();
-
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error adding tool to backend. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(`Failed to add tool: ${errorText}`);
+            .filter(t => t.categorySlug !== currentTool.categorySlug) // Exclude tools from current category (already considered)
+            .sort((a, b) => b.rating - a.rating); // Higher rating first
+        
+        // Add tools from other categories until we have 3 related tools, avoiding duplicates
+        for (const tool of otherHighlyRatedTools) {
+            if (related.length >= 3) break;
+            if (!related.find(rt => rt.slug === tool.slug)) {
+                related.push(tool);
+            }
         }
-        console.log("Tool added successfully via backend:", result.data);
-        return result.data;
-    } catch (error) {
-        console.error("Error in addToolToBackend:", error);
-        return null;
     }
+    
+    return related.slice(0, 3); // Return up to 3 related tools
 };
 
-export const addCategoryToBackend = async (categoryData: Omit<Category, '_id' | 'createdAt'>): Promise<Category | null> => {
-    try {
-        const url = getAbsoluteUrl('/categories/add');
-        console.log(`Adding category to backend via: ${url} with payload:`, categoryData);
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(categoryData),
-        });
-        const result: ApiResponse<Category> = await response.json();
-
-        if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error adding category to backend. Status: ${response.status}, Response: ${JSON.stringify(result)}, Body: ${errorText}`);
-            throw new Error(`Failed to add category: ${errorText}`);
-        }
-        console.log("Category added successfully via backend:", result.data);
-        return result.data;
-    } catch (error) {
-        console.error("Error in addCategoryToBackend:", error);
-        return null;
-    }
+// For Admin Dashboard data fetching, to be called from client components
+export const apiGetAllTools = async (): Promise<Tool[]> => {
+    return getAllTools(); // Reuses the existing logic
 };
 
-// Added for Admin Dashboard types - using specific names for clarity
+export const apiGetAllCategories = async (): Promise<Category[]> => {
+    return getAllCategories(); // Reuses the existing logic
+};
+
+// For Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
+
