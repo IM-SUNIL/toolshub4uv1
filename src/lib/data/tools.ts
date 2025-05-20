@@ -137,7 +137,7 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories'); // Corrected endpoint
+        const url = getAbsoluteUrl('/categories/all'); // Corrected endpoint
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
         const result: ApiResponse<Category[]> = await response.json();
