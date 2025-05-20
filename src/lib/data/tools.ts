@@ -2,7 +2,7 @@
 // In a real application, this data will come from the MongoDB database via API calls.
 
 import type { LucideIcon } from 'lucide-react';
-import { Zap, FileText, Scissors, Video, Code, Star, StarHalf, CheckCircle, Home, ChevronRight, Send, ArrowLeft, ArrowRight } from 'lucide-react'; // Added CheckCircle
+import { Zap, FileText, Scissors, Video, Code, Star, StarHalf, CheckCircle, Home, ChevronRight, Send, ArrowLeft, ArrowRight } from 'lucide-react';
 import * as React from 'react';
 
 // Define Tool and Comment types based on Mongoose schemas
@@ -71,14 +71,14 @@ export const iconMap: { [key: string]: LucideIcon } = {
 // Force HTTPS for the API base URL
 const API_BASE_URL = "https://toolshub4u-backend.onrender.com/api";
 
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== API_BASE_URL) {
-    console.warn(
-        '\x1b[33m%s\x1b[0m',
-        `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
-    );
-} else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
-     console.log(`API_BASE_URL is set to: ${API_BASE_URL} (hardcoded HTTPS)`);
-}
+// if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL !== API_BASE_URL) {
+//     console.warn(
+//         '\x1b[33m%s\x1b[0m',
+//         `Warning: NEXT_PUBLIC_API_BASE_URL environment variable ("${process.env.NEXT_PUBLIC_API_BASE_URL}") is being overridden by a hardcoded HTTPS URL in tools.ts ("${API_BASE_URL}") to ensure secure connections.`
+//     );
+// } else if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_BASE_URL) {
+//      console.log(`API_BASE_URL is set to: ${API_BASE_URL} (hardcoded HTTPS)`);
+// }
 
 
 export const getAbsoluteUrl = (path: string): string => {
@@ -93,21 +93,20 @@ export const getAbsoluteUrl = (path: string): string => {
 
 export const getAllTools = async (): Promise<Tool[]> => {
     try {
-        // This will construct https://toolshub4u-backend.onrender.com/api/tools/all
         const url = getAbsoluteUrl('/tools/all');
-        console.log(`Fetching all tools from: ${url}`); // For debugging
+        console.log(`Fetching all tools from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Tool[]> = await response.json();
+        const result: ApiResponse<Tool[]> = await response.json(); // FIRST READ
 
         if (!response.ok || !result.success) {
-            const errorText = result.error || await response.text();
-            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response: ${JSON.stringify(result)} Body: ${errorText}`);
-            return []; // Return empty array on explicit API error or non-success
+            const errorText = result.error || JSON.stringify(result); // Use result, not response.text()
+            console.error(`Error fetching all tools. Status: ${response.status}, URL: ${url}, Response details: ${errorText}`);
+            return [];
         }
-        return result.data || []; // Ensure it returns an empty array if data is null
+        return result.data || [];
     } catch (error) {
         console.error("Network or other error in getAllTools:", error);
-        return []; // Return empty array on network errors or other exceptions
+        return [];
     }
 };
 
@@ -137,13 +136,13 @@ export const getToolBySlug = async (slug: string): Promise<Tool | null> => {
 
 export const getAllCategories = async (): Promise<Category[]> => {
     try {
-        const url = getAbsoluteUrl('/categories/all'); // Corrected endpoint
+        const url = getAbsoluteUrl('/categories'); // Corrected endpoint
         console.log(`Fetching all categories from: ${url}`);
         const response = await fetch(url);
-        const result: ApiResponse<Category[]> = await response.json();
+        const result: ApiResponse<Category[]> = await response.json(); // First read
 
         if (!response.ok || !result.success) {
-            const errorText = result.error || (response.headers.get('content-type')?.includes('application/json') ? JSON.stringify(await response.json()) : await response.text());
+            const errorText = result.error || JSON.stringify(result); // Use result, not trying to re-read response
             console.error(`API error fetching all categories. Status: ${response.status}, URL: ${url}, Response: ${errorText}`);
             return [];
         }
@@ -252,8 +251,9 @@ export const getAllComments = async (): Promise<Comment[]> => {
 
 
 export const getIconComponent = (iconName: string): LucideIcon => {
-    return iconMap[iconName] || Zap;
+    return iconMap[iconName] || Zap; // Fallback to Zap icon if not found
 };
+
 
 export const renderStars = (rating: number): React.ReactNode[] => {
     const fullStars = Math.floor(rating);
@@ -261,8 +261,8 @@ export const renderStars = (rating: number): React.ReactNode[] => {
     const emptyStars = 5 - fullStars - (halfStarPresent ? 1 : 0);
     const starsArray: React.ReactNode[] = [];
 
-    const StarIcon = getIconComponent('Star'); // Use getIconComponent
-    const StarHalfIcon = getIconComponent('StarHalf'); // Use getIconComponent
+    const StarIcon = getIconComponent('Star');
+    const StarHalfIcon = getIconComponent('StarHalf');
 
     for (let i = 0; i < fullStars; i++) {
         starsArray.push(React.createElement(StarIcon, { key: `full-${i}`, className: "h-5 w-5 fill-yellow-400 text-yellow-400" }));
@@ -311,7 +311,7 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
         const otherHighlyRatedTools = otherTools
             .filter(t => t.categorySlug !== currentTool.categorySlug) // Exclude tools from current category (already considered)
             .sort((a, b) => b.rating - a.rating); // Higher rating first
-        
+
         // Add tools from other categories until we have 3 related tools, avoiding duplicates
         for (const tool of otherHighlyRatedTools) {
             if (related.length >= 3) break;
@@ -320,7 +320,7 @@ export const getRelatedTools = async (currentTool: Tool): Promise<Tool[]> => {
             }
         }
     }
-    
+
     return related.slice(0, 3); // Return up to 3 related tools
 };
 
@@ -336,3 +336,4 @@ export const apiGetAllCategories = async (): Promise<Category[]> => {
 // For Admin Dashboard types - using specific names for clarity
 export type { Tool as APITool, Category as APICategoryType };
 
+    
